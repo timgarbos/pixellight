@@ -29,9 +29,9 @@ pixellight!
 /*
 	globals
 */
-class Node;
-class Geom;
-//Node *	root;
+class LevelNode;
+class LevelGeom;
+LevelNode *	root;
 Vec2	pos;
 
 /*
@@ -64,7 +64,7 @@ inline bool rayline(Vec2 const & u0, Vec2 const & ud, Vec2 const & v0, Vec2 cons
 /*
 	trace
 */
-inline void trace(Node * node, Vec2 pos, Vec2 dir, float dMax, float & dOut, Geom * & geom)
+inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut, Geom * & geom)
 {
 	float d = 0.0f;
 	float t;
@@ -98,10 +98,23 @@ inline void trace(Node * node, Vec2 pos, Vec2 dir, float dMax, float & dOut, Geo
 }
 
 /*
+	debug world
+*/
+LevelNode* createDebugWorld()
+{
+	LevelNode* worldCenter = new LevelNode();
+	worldCenter->CreateRandomWorld(0,0,0);
+	return worldCenter;
+}
+
+/*
 	game
 */
 void game()
 {
+	root = createDebugWorld();
+	pos.x = 0;
+	pos.y = 0;
 	while (true)
 	{
 		glfwPollEvents();
@@ -147,12 +160,3 @@ int main(int argc, char * argv[])
 	return 0;
 }
 
-/*
-	game
-*/
-LevelNode* createDebugWorld()
-{
-	LevelNode* worldCenter = new LevelNode();
-	worldCenter->CreateRandomWorld(0,0,0);
-	return worldCenter;
-}
