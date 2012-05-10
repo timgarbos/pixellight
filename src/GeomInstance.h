@@ -6,7 +6,7 @@
 class GeomInstance
 {
 public:
-	GeomInstance(void);
+	GeomInstance(Vec2 pos,Geom * masterGeom);
 	~GeomInstance(void);
 	
 	Vec2 pos;

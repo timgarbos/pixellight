@@ -92,3 +92,13 @@ int main(int argc, char * argv[])
 
 	return 0;
 }
+
+/*
+	game
+*/
+LevelNode* createDebugWorld()
+{
+	LevelNode* worldCenter = new LevelNode();
+	worldCenter->CreateRandomWorld(0,0,0);
+	return worldCenter;
+}

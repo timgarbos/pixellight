@@ -6,7 +6,7 @@ class LevelNode;
 class LevelEdge
 {
 public:
-	LevelEdge(void);
+	LevelEdge(int ccwSteps, LevelNode * Node);
 	~LevelEdge(void);
 
 	int  ccwSteps;

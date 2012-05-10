@@ -1,8 +1,10 @@
 #include "LevelEdge.h"
 
 
-LevelEdge::LevelEdge(void)
+LevelEdge::LevelEdge(int ccwSteps, LevelNode * Node)
 {
+	this->ccwSteps = ccwSteps;
+	this->Node = Node;
 }
 
 
