@@ -75,7 +75,6 @@ inline void trace(Node * node, Vec2 pos, Vec2 dir, float dMax, float & dOut, Geo
 		// find nearest intersection with local geometry
 		//TODO
 
-<<<<<<< HEAD
 		// if unsuccessful, then find intersection with local boundary
 		//TODO
 
@@ -96,9 +95,6 @@ inline void trace(Node * node, Vec2 pos, Vec2 dir, float dMax, float & dOut, Geo
 	{
 		dOut = d;
 	}
-=======
-	return true;
->>>>>>> f658e86f203f87a1c4694cc3707d2286695fbc2e
 }
 
 /*

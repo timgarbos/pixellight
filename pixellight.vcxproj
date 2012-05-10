@@ -93,15 +93,6 @@
       <AdditionalDependencies>user32.lib;opengl32.lib;glfw.lib;fmodex_vc.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-<<<<<<< HEAD
-  <ItemGroup>
-    <ClCompile Include="src\main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\Vec2.h" />
-  </ItemGroup>
-=======
->>>>>>> f658e86f203f87a1c4694cc3707d2286695fbc2e
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
