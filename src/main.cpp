@@ -15,9 +15,9 @@ pixellight!
 
 // local
 #include "Vec2.h"
-//#include "Node.h"
-//#include "Edge.h"
-//#include "Geom.h"
+#include "LevelNode.h"
+#include "LevelEdge.h"
+#include "Geom.h"
 
 /*
 	MACROS
@@ -40,6 +40,7 @@ Vec2	pos;
 bool trace(Node * node, Vec2 const & pos, Vec2 const & dir, float dMax, float * dOut, Geom ** geom)
 {
 
+	return true;
 }
 
 /*

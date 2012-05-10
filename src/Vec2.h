@@ -1,3 +1,5 @@
+#pragma once
+
 /* Vec2.h
 
 pixellight!
