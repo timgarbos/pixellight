@@ -90,20 +90,33 @@ inline void rot90(Vec2 & v, int ccwSteps)
 /*
 	trace
 */
-inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut, Geom * & geom)
+inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut, Geom * & geom, LevelNode * & dest, Vec2 & npos)
 {
-	LevelEdge *	ce;
+	int c = 0;
+	LevelEdge *	ce = NULL;
 	Vec2		x;
+	float		sx;
+	float		sy;
 	float		ut;	// distance along trace direction
 	float		vt;	// distance along edge
 	float		d = 0.0f;
 	bool		f = false;
 
+	//std::cout << "-- new trace" << std::endl;
+
+	// assume no node changes
+	dest = node;
+
 	// loop until the maximum distance has been reached, or no more nodes
 	while ((d < dMax) && node != NULL)
 	{
+		//std::cout << "node = " << node << std::endl;
 		// find nearest intersection with local geometry
 		//TODO
+		//if (++c > 10)
+		//{
+		//	break;
+		//}
 
 		// if unsuccessful, then find intersection with node boundary
 		if (!f)
@@ -111,27 +124,39 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut
 			// transfer to edge
 			if (rayline(pos, dir, v00, v10, ut, vt))
 			{
+				//std::cout << "south, ut = " << ut << std::endl;
 				ce		= node->s;// => south
-				pos.x	= ut*dir.x;
+				pos.x	= pos.x + ut*dir.x;
 				pos.y	= -1.0f;
+				sx		= 1.0f;
+				sy		= -1.0f;
 			}
 			else if (rayline(pos, dir, v10, v11, ut, vt))
 			{
+				//std::cout << "east, ut = " << ut << std::endl;
 				ce		= node->e;// => east
 				pos.x	= 1.0f;
-				pos.y	= ut*dir.y;
+				pos.y	= pos.y + ut*dir.y;
+				sx		= -1.0f;
+				sy		= 1.0f;
 			}
 			else if (rayline(pos, dir, v11, v01, ut, vt))
 			{
+				//std::cout << "north, ut = " << ut << std::endl;
 				ce		= node->n;// => north
-				pos.x	= ut*dir.x;
+				pos.x	= pos.x + ut*dir.x;
 				pos.y	= 1.0f;
+				sx		= 1.0f;
+				sy		= -1.0f;
 			}
 			else if (rayline(pos, dir, v01, v00, ut, vt))
 			{
+				//std::cout << "west, ut = " << ut << std::endl;
 				ce		= node->w;// => west
 				pos.x	= -1.0f;
-				pos.y	= ut*dir.y;
+				pos.y	= pos.y + ut*dir.y;
+				sx		= -1.0f;
+				sy		= 1.0f;
 			}
 
 			// transform position
@@ -139,18 +164,24 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut
 
 			if ((ce->ccwSteps % 2) == 0)
 			{
-				pos.x *= -1.0f;
+				pos.x *= sx;
+				pos.y *= sy;
 			}
 			else
 			{
-				pos.y *= -1.0f;
+				pos.x *= sy;
+				pos.y *= sx;
 			}
+
+			//std::cout << "dir " << dir.x << ", " << dir.y << std::endl;
+			//std::cout << "pos " << pos.x << ", " << pos.y << std::endl;
 
 			// transform direction
 			rot90(dir, ce->ccwSteps);
 
 			// move to connecting node
 			node = ce->Node;
+			dest = node;
 		}
 
 		// increment distance travelled
@@ -167,6 +198,8 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut
 	{
 		dOut = d;
 	}
+
+	npos = pos;
 }
 
 /*
@@ -175,8 +208,29 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut
 LevelNode* createDebugWorld()
 {
 	LevelNode* worldCenter = new LevelNode();
-	worldCenter->CreateRandomWorld(0,0,0);
+	worldCenter->CreateRandomWorld(0);
 	return worldCenter;
+}
+
+/*
+	move
+*/
+void move_view(Vec2 const & v)
+{
+	float		vlen = std::sqrt(v.x*v.x + v.y*v.y);
+	Vec2		dir = Vec2(v.x / vlen, v.y / vlen);
+	LevelNode *	dest = NULL;
+	Geom *		geom = NULL;
+	Vec2		npos;
+	float		d;
+
+	std::cout << "vlen = " << vlen << std::endl;
+	trace(root, pos, dir, vlen, d, geom, dest, npos);
+
+	root = dest;
+
+	pos.x = npos.x;
+	pos.y = npos.y;
 }
 
 /*
@@ -184,10 +238,12 @@ LevelNode* createDebugWorld()
 */
 void game()
 {
-	float	step = (2.0f * 3.14f) / static_cast<float>(RAYSFRAME);
-	Vec2	dir;
-	float	d;
-	Geom *	geom;
+	float		step = (2.0f * 3.14f) / static_cast<float>(RAYSFRAME);
+	Vec2		dir;
+	Vec2		tmp;
+	float		d;
+	Geom *		geom = NULL;
+	LevelNode *	dest = NULL;
 
 	root = createDebugWorld();
 	pos.x = 0;
@@ -204,12 +260,28 @@ void game()
 		}
 
 		// handle input
-		//todo
+		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
+		{
+			std::cout << "ksbghfdbg" << std::endl;
+			move_view(Vec2(-0.1f, 0.0f));
+		}
+		else if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
+		{
+			move_view(Vec2(0.5f, 0.0f));
+		}
+		else if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
+		{
+			move_view(Vec2(0.0f, 0.5f));
+		}
+		else if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
+		{
+			move_view(Vec2(0.0f, -0.5f));
+		}
 
 		// prep
 		glClear(GL_COLOR_BUFFER_BIT);
 		glLoadIdentity();
-		glScalef(0.5f, 0.5f, 0.5f);
+		glScalef(0.1f, 0.1f, 0.1f);
 		glColor3f(1.0f, 1.0f, 1.0f);
 
 		// draw some rays
@@ -218,7 +290,7 @@ void game()
 			dir.x = cos(step * i);
 			dir.y = sin(step * i);
 
-			trace(root, pos, dir, 20.0f, d, geom);
+			trace(root, pos, dir, 20.0f, d, geom, dest, tmp);
 
 			glBegin(GL_LINES);
 			{
@@ -244,6 +316,7 @@ int main(int argc, char * argv[])
 	// init
 	glfwInit();
 	glfwSwapInterval(1);// vsync
+	glfwEnable(GLFW_STICKY_KEYS);
 	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
 	glfwOpenWindow(WINW, WINH, 8, 8, 8, 0, 0, 0, GLFW_WINDOW);
 	glfwSetWindowTitle("pixellight");
