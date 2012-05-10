@@ -33,10 +33,6 @@ Vec2		v00 = Vec2(-1.0f, -1.0f);	// lower left
 Vec2		v10 = Vec2(1.0f, -1.0f);	// lower right
 Vec2		v01 = Vec2(-1.0f, 1.0f);	// upper left
 Vec2		v11 = Vec2(1.0f, 1.0f);		// upper right
-class LevelNode;
-class LevelGeom;
-LevelNode *	root;
-Vec2	pos;
 
 LevelNode *	root;
 Vec2		pos;
@@ -68,17 +64,6 @@ inline bool rayline(Vec2 const & u0, Vec2 const & ud, Vec2 const & v0, Vec2 cons
 }
 
 /*
-	swap
-*/
-template <typename T>
-inline void swap(T & a, T & b)
-{
-	T tmp = a;
-	a = b;
-	b = tmp;
-}
-
-/*
 	rot90
 */
 inline void rot90(Vec2 & v, int ccwSteps)
@@ -87,7 +72,7 @@ inline void rot90(Vec2 & v, int ccwSteps)
 	{
 	case 1:
 		v.y *= -1.0f;
-		swap(v.x, v.y);
+		std::swap(v.x, v.y);
 		break;
 
 	case 2:
@@ -97,7 +82,7 @@ inline void rot90(Vec2 & v, int ccwSteps)
 
 	case 3:
 		v.x *= -1.0f;
-		swap(v.x, v.y);
+		std::swap(v.x, v.y);
 		break;
 	}
 }
@@ -168,9 +153,6 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut
 			node = e->Node;
 		}
 
-		// move to next node
-		//TODO
-
 		// increment distance travelled
 		d += ut;
 	}
@@ -202,9 +184,15 @@ LevelNode* createDebugWorld()
 */
 void game()
 {
+	float	step = (2.0f * 3.14f) / static_cast<float>(RAYSFRAME);
+	Vec2	dir;
+	float	d;
+	Geom *	geom;
+
 	root = createDebugWorld();
 	pos.x = 0;
 	pos.y = 0;
+
 	while (true)
 	{
 		glfwPollEvents();
@@ -219,9 +207,21 @@ void game()
 		//todo
 
 		// trace some rays
+		glColor3f(1.0f, 1.0f, 1.0f);
+
 		for (unsigned int i = 0; i < RAYSFRAME; i++)
 		{
+			dir.x = cos(step * i);
+			dir.y = sin(step * i);
 
+			trace(root, pos, dir, 100.0f, d, geom);
+
+			glBegin(GL_LINES);
+			{
+				glVertex2f(0.0f, 0.0f);
+				glVertex2f(d*dir.x, d*dir.y);
+			}
+			glEnd();
 		}
 
 		// swap
