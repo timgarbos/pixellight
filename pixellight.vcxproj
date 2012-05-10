@@ -10,6 +10,20 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Geom.cpp" />
+    <ClCompile Include="src\GeomInstance.cpp" />
+    <ClCompile Include="src\LevelEdge.cpp" />
+    <ClCompile Include="src\LevelNode.cpp" />
+    <ClCompile Include="src\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Geom.h" />
+    <ClInclude Include="src\GeomInstance.h" />
+    <ClInclude Include="src\LevelEdge.h" />
+    <ClInclude Include="src\LevelNode.h" />
+    <ClInclude Include="src\Vec2.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{435FB563-2946-400F-B0B8-4126DD873D45}</ProjectGuid>
     <RootNamespace>pixellight</RootNamespace>
@@ -79,12 +93,15 @@
       <AdditionalDependencies>user32.lib;opengl32.lib;glfw.lib;fmodex_vc.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
+<<<<<<< HEAD
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Vec2.h" />
   </ItemGroup>
+=======
+>>>>>>> f658e86f203f87a1c4694cc3707d2286695fbc2e
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
