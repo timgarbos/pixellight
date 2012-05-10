@@ -24,7 +24,7 @@ pixellight!
 */
 #define WINW		512
 #define WINH		512
-#define RAYSFRAME	100
+#define RAYSFRAME	50
 
 /*
 	globals
@@ -92,7 +92,7 @@ inline void rot90(Vec2 & v, int ccwSteps)
 */
 inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut, Geom * & geom)
 {
-	LevelEdge *	e;
+	LevelEdge *	ce;
 	Vec2		x;
 	float		ut;	// distance along trace direction
 	float		vt;	// distance along edge
@@ -111,33 +111,33 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut
 			// transfer to edge
 			if (rayline(pos, dir, v00, v10, ut, vt))
 			{
-				e		= node->s;// => south
+				ce		= node->s;// => south
 				pos.x	= ut*dir.x;
 				pos.y	= -1.0f;
 			}
 			else if (rayline(pos, dir, v10, v11, ut, vt))
 			{
-				e		= node->e;// => east
+				ce		= node->e;// => east
 				pos.x	= 1.0f;
 				pos.y	= ut*dir.y;
 			}
 			else if (rayline(pos, dir, v11, v01, ut, vt))
 			{
-				e		= node->n;// => north
+				ce		= node->n;// => north
 				pos.x	= ut*dir.x;
 				pos.y	= 1.0f;
 			}
 			else if (rayline(pos, dir, v01, v00, ut, vt))
 			{
-				e		= node->w;// => west
+				ce		= node->w;// => west
 				pos.x	= -1.0f;
 				pos.y	= ut*dir.y;
 			}
 
 			// transform position
-			rot90(pos, e->ccwSteps);
+			rot90(pos, ce->ccwSteps);
 
-			if (e->ccwSteps % 2 == 0)
+			if ((ce->ccwSteps % 2) == 0)
 			{
 				pos.x *= -1.0f;
 			}
@@ -147,10 +147,10 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut
 			}
 
 			// transform direction
-			rot90(dir, e->ccwSteps);
+			rot90(dir, ce->ccwSteps);
 
 			// move to connecting node
-			node = e->Node;
+			node = ce->Node;
 		}
 
 		// increment distance travelled
@@ -206,15 +206,19 @@ void game()
 		// handle input
 		//todo
 
-		// trace some rays
+		// prep
+		glClear(GL_COLOR_BUFFER_BIT);
+		glLoadIdentity();
+		glScalef(0.5f, 0.5f, 0.5f);
 		glColor3f(1.0f, 1.0f, 1.0f);
 
+		// draw some rays
 		for (unsigned int i = 0; i < RAYSFRAME; i++)
 		{
 			dir.x = cos(step * i);
 			dir.y = sin(step * i);
 
-			trace(root, pos, dir, 100.0f, d, geom);
+			trace(root, pos, dir, 20.0f, d, geom);
 
 			glBegin(GL_LINES);
 			{

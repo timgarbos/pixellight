@@ -24,7 +24,7 @@ void LevelNode::CreateRandomWorld(int depth, int dir, LevelNode* back)
 	GeomInstance* newGeomInst = new GeomInstance(Vec2(0,0),newGeom);
 	objs.push_back(newGeomInst);
 
-	if(depth<3) //stop at some test level
+	if(depth<1) //stop at some test level
 	{
 		depth++;
 
