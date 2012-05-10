@@ -35,11 +35,66 @@ class Geom;
 Vec2	pos;
 
 /*
+	rayline
+*/
+inline bool rayline(Vec2 const & u0, Vec2 const & ud, Vec2 const & v0, Vec2 const & v1, float & ut, float & vt)
+{
+	float vdx	= v1.x-v0.x;
+	float vdy	= v1.y-v0.y;
+	float d		= ud.y*vdx - ud.x*vdy;
+
+	if (d != 0.0f)
+	{
+		float const r	= 1.0f / d;
+		float const a	= r * (v0.y - u0.y);
+		float const b	= r * (u0.x - v0.x);
+
+		ut	= vdx*a + vdy*b;
+		vt	= ud.x*a + ud.y*b;
+
+		return (ut >= 0.0f && vt >= 0.0f && vt <= 1.0f);
+	}
+	else
+	{
+		return false;
+	}
+
+}
+
+/*
 	trace
 */
-bool trace(Node * node, Vec2 const & pos, Vec2 const & dir, float dMax, float * dOut, Geom ** geom)
+inline void trace(Node * node, Vec2 pos, Vec2 dir, float dMax, float & dOut, Geom * & geom)
 {
+	float d = 0.0f;
+	float t;
 
+	// loop until the maximum distance has been reached, or no more nodes
+	while ((d < dMax) && node != NULL)
+	{
+		// find nearest intersection with local geometry
+		//TODO
+
+		// if unsuccessful, then find intersection with local boundary
+		//TODO
+
+		// move to next node
+		//TODO
+
+		// increment distance travelled
+		d += t;
+	}
+
+	// cap the output
+	if (d > dMax)
+	{
+		dOut = dMax;
+		geom = NULL;
+	}
+	else
+	{
+		dOut = d;
+	}
 }
 
 /*
