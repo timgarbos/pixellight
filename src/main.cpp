@@ -111,24 +111,28 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut
 			// transfer to edge
 			if (rayline(pos, dir, v00, v10, ut, vt))
 			{
+				printf("\ngoing south",0);
 				e		= node->s;// => south
 				pos.x	= ut*dir.x;
 				pos.y	= -1.0f;
 			}
 			else if (rayline(pos, dir, v10, v11, ut, vt))
 			{
+				printf("\ngoing east",0);
 				e		= node->e;// => east
 				pos.x	= 1.0f;
 				pos.y	= ut*dir.y;
 			}
 			else if (rayline(pos, dir, v11, v01, ut, vt))
 			{
+				printf("\ngoing north",0);
 				e		= node->n;// => north
 				pos.x	= ut*dir.x;
 				pos.y	= 1.0f;
 			}
 			else if (rayline(pos, dir, v01, v00, ut, vt))
 			{
+				printf("\ngoing west",0);
 				e		= node->w;// => west
 				pos.x	= -1.0f;
 				pos.y	= ut*dir.y;
@@ -150,6 +154,7 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut
 			rot90(dir, e->ccwSteps);
 
 			// move to connecting node
+			printf("\n node: %i",node);
 			node = e->Node;
 		}
 
@@ -175,7 +180,7 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut
 LevelNode* createDebugWorld()
 {
 	LevelNode* worldCenter = new LevelNode();
-	worldCenter->CreateRandomWorld(0,0,0);
+	worldCenter->CreateRandomWorld(0);
 	return worldCenter;
 }
 

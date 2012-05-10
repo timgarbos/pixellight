@@ -13,7 +13,7 @@ class LevelNode
 public:
 	LevelNode(void);
 	~LevelNode(void);
-	void CreateRandomWorld(int depth, int dir, LevelNode* parent);
+	void CreateRandomWorld(int depth);
 
 	LevelEdge *w;
 	LevelEdge *e;
