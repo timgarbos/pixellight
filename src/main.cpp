@@ -29,8 +29,18 @@ pixellight!
 /*
 	globals
 */
+class Node;
+class Geom;
 //Node *	root;
 Vec2	pos;
+
+/*
+	trace
+*/
+bool trace(Node * node, Vec2 const & pos, Vec2 const & dir, float dMax, float * dOut, Geom ** geom)
+{
+
+}
 
 /*
 	game
