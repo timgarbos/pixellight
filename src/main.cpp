@@ -33,6 +33,10 @@ Vec2		v00 = Vec2(-1.0f, -1.0f);	// lower left
 Vec2		v10 = Vec2(1.0f, -1.0f);	// lower right
 Vec2		v01 = Vec2(-1.0f, 1.0f);	// upper left
 Vec2		v11 = Vec2(1.0f, 1.0f);		// upper right
+class LevelNode;
+class LevelGeom;
+LevelNode *	root;
+Vec2	pos;
 
 LevelNode *	root;
 Vec2		pos;
@@ -184,10 +188,23 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut
 }
 
 /*
+	debug world
+*/
+LevelNode* createDebugWorld()
+{
+	LevelNode* worldCenter = new LevelNode();
+	worldCenter->CreateRandomWorld(0,0,0);
+	return worldCenter;
+}
+
+/*
 	game
 */
 void game()
 {
+	root = createDebugWorld();
+	pos.x = 0;
+	pos.y = 0;
 	while (true)
 	{
 		glfwPollEvents();

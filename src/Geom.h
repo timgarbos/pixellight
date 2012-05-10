@@ -5,7 +5,7 @@
 class Geom
 {
 public:
-	Geom(void);
+	Geom(bool isStatic, Vec2 extends);
 	~Geom(void);
 
 	bool isStatic;

@@ -1,8 +1,10 @@
 #include "GeomInstance.h"
 
 
-GeomInstance::GeomInstance(void)
+GeomInstance::GeomInstance(Vec2 pos,Geom * masterGeom)
 {
+	this->pos = pos;
+	this->masterGeom = masterGeom;
 }
 
 

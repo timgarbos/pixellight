@@ -1,8 +1,10 @@
 #include "Geom.h"
 
 
-Geom::Geom(void)
+Geom::Geom(bool isStatic, Vec2 extends)
 {
+	this->isStatic = isStatic;
+	this->extends = extends;
 }
 
 
