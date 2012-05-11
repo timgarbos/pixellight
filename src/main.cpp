@@ -32,7 +32,7 @@ pixellight!
 #define TX(x,y)		(texdata + (x) + (y)*TEXW)
 #define FF(n)		(n & 0xff)
 #define RGB(r,g,b)	(0xff000000 | (FF(b)<<16) | (FF(g)<<8) | (FF(r)))
-#define RANDRGB		(RGB(100+rand()%156,100+rand()%156,100+rand()%156))
+#define RANDRGB		(RGB(rand()%256,rand()%256,rand()%256))
 
 #define DT			0.01666667f
 #define PI			3.14159265f
@@ -653,7 +653,7 @@ void game()
 			dir.y = sin(a);
 
 			trace(root, pos, dir, 15.0f, tr);
-			rot90(dir, ccw);
+			rot90(dir, 4-ccw);
 
 			float vel = 0.8f + 0.1f * (rand() % 50);
 			float ttl = (60.0f/vel) * tr.d;
