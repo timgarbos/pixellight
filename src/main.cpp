@@ -24,8 +24,15 @@ pixellight!
 */
 #define WINW		512
 #define WINH		512
-#define RAYSFRAME	1000
+
+#define RAYSFRAME	100
 #define TRACEDEBUG	0
+
+#define EDGE_S		0
+#define EDGE_E		1
+#define EDGE_N		2
+#define EDGE_W		3
+#define EDGE_NONE	4
 
 /*
 	globals
@@ -56,7 +63,7 @@ inline bool rayline(Vec2 const & u0, Vec2 const & ud, Vec2 const & v0, Vec2 cons
 		ut = vdx*a + vdy*b;
 		vt = ud.x*a + ud.y*b;
 
-		return (ut > 0.0f && vt >= 0.0f && vt <= 1.0f);
+		return (ut >= 0.0f && vt >= 0.0f && vt <= 1.0f);
 	}
 	else
 	{
@@ -116,9 +123,31 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 	float		sx;	// sign of x-component after moving node
 	float		sy; // sign of y-component after moving node
 
+	int			ci	= EDGE_NONE;
+	int			co	= EDGE_NONE;
+
 #if TRACEDEBUG
 	std::cout << "--- new trace" << std::endl;
 #endif
+
+	// hack hack
+	if (pos.x == 1.0f)
+	{
+		pos.x -= static_cast<float>(1e-7);
+	}
+	else if (pos.x == -1.0f)
+	{
+		pos.x += static_cast<float>(1e-7);
+	}
+
+	if (pos.y == 1.0f)
+	{
+		pos.y -= static_cast<float>(1e-7);
+	}
+	else if (pos.y == -1.0f)
+	{
+		pos.y += static_cast<float>(1e-7);
+	}
 
 	// loop until the maximum distance has been reached, or no more nodes
 	while (r > 0.0f && node != NULL)
@@ -139,7 +168,7 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 		if (!f)
 		{
 			// pick connecting edge
-			if (rayline(pos, dir, v00, v10, ut, vt))
+			if (ci != EDGE_S && rayline(pos, dir, v00, v10, ut, vt))
 			{
 #if TRACEDEBUG
 				std::cout << "going south" << std::endl;
@@ -148,8 +177,9 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 				ce = node->s;
 				sx = 1.0f;
 				sy = -1.0f;
+				co = EDGE_S;
 			}
-			else if (rayline(pos, dir, v10, v11, ut, vt))
+			else if (ci != EDGE_E && rayline(pos, dir, v10, v11, ut, vt))
 			{
 #if TRACEDEBUG
 				std::cout << "going east" << std::endl;
@@ -158,8 +188,9 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 				ce = node->e;
 				sx = -1.0f;
 				sy = 1.0f;
+				co = EDGE_E;
 			}
-			else if (rayline(pos, dir, v11, v01, ut, vt))
+			else if (ci != EDGE_N && rayline(pos, dir, v11, v01, ut, vt))
 			{
 #if TRACEDEBUG
 				std::cout << "going north" << std::endl;
@@ -168,8 +199,9 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 				ce = node->n;
 				sx = 1.0f;
 				sy = -1.0f;
+				co = EDGE_N;
 			}
-			else if (rayline(pos, dir, v01, v00, ut, vt))
+			else if (ci != EDGE_W && rayline(pos, dir, v01, v00, ut, vt))
 			{
 #if TRACEDEBUG
 				std::cout << "going west" << std::endl;
@@ -178,6 +210,7 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 				ce = node->w;
 				sx = -1.0f;
 				sy = 1.0f;
+				co = EDGE_W;
 			}
 			else
 			{
@@ -214,6 +247,26 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 				// check for connecting node
 				if (ce->Node != NULL)
 				{
+					// update edge-in
+					switch (ce->ccwSteps)
+					{
+					case 0:
+						ci = (2 + co) % 4;
+						break;
+					
+					case 1:
+						ci = (3 + co) % 4;
+						break;
+
+					case 2:
+						ci = co;
+						break;
+
+					case 3:
+						ci = (1 + co) % 4;
+						break;
+					}
+
 					// transform position
 					rot90(pos, ce->ccwSteps);
 
@@ -284,8 +337,6 @@ void move_view(Vec2 const & v)
 	root	= tr.node;
 	pos.x	= tr.pos.x;
 	pos.y	= tr.pos.y;
-
-	std::cout << "pos = " << tr.pos.x << ", " << tr.pos.y << std::endl;
 }
 
 /*
