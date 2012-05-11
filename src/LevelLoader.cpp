@@ -22,14 +22,14 @@ LevelNode* LevelLoader::LoadXml()
 	}
 	else
 	{
-		printf("\nLoaded XML FALIED.",0);
+		printf("\nLoaded XML FALIED. %i",doc->ErrorID());
 	}
 	XMLNode* levels = doc->FirstChild()->ToElement();
 	XMLNode * level;
 	
 	for( level = levels->FirstChild(); level; level = level->NextSibling() )
 	{
-		printf("\n starting load level",0);
+		
 		//To make relations easy we create a list of all the nodes, in order to later connect them
 		vector<LevelNode*> levelNodes;
 
@@ -113,6 +113,6 @@ LevelNode* LevelLoader::LoadXml()
 		printf("\n LOADED LEVEL \n",0);
 		
 	}
-	
+	delete doc;
 	return rootNode;
 }
