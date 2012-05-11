@@ -616,19 +616,19 @@ void game()
 
 		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
-			mov.x -= 0.05f;
+			mov.x -= 0.02f;
 		}
 		if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
-			mov.x += 0.05f;
+			mov.x += 0.02f;
 		}
 		if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			mov.y += 0.05f;
+			mov.y += 0.02f;
 		}
 		if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
-			mov.y -= 0.05f;
+			mov.y -= 0.02f;
 		}
 
 		rot90(mov, ccw);
