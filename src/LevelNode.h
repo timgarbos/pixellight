@@ -19,6 +19,7 @@ public:
 	LevelEdge *e;
 	LevelEdge *n;
 	LevelEdge *s;
+	
 
 	list<GeomInstance*> objs;
 

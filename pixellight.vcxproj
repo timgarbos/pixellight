@@ -14,14 +14,20 @@
     <ClCompile Include="src\Geom.cpp" />
     <ClCompile Include="src\GeomInstance.cpp" />
     <ClCompile Include="src\LevelEdge.cpp" />
+    <ClCompile Include="src\LevelLoader.cpp" />
+    <ClCompile Include="src\LevelLoadNode.cpp" />
     <ClCompile Include="src\LevelNode.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\tinyxml2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Geom.h" />
     <ClInclude Include="src\GeomInstance.h" />
     <ClInclude Include="src\LevelEdge.h" />
+    <ClInclude Include="src\LevelLoader.h" />
+    <ClInclude Include="src\LevelLoadNode.h" />
     <ClInclude Include="src\LevelNode.h" />
+    <ClInclude Include="src\tinyxml2.h" />
     <ClInclude Include="src\Vec2.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

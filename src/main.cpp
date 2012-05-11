@@ -18,6 +18,7 @@ pixellight!
 #include "LevelNode.h"
 #include "LevelEdge.h"
 #include "Geom.h"
+#include "LevelLoader.h"
 
 /*
 	MACROS
@@ -213,9 +214,10 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut
 */
 LevelNode* createDebugWorld()
 {
-	LevelNode* worldCenter = new LevelNode();
+	return LevelLoader::LoadXml();
+	/*LevelNode* worldCenter = new LevelNode();
 	worldCenter->CreateRandomWorld(0);
-	return worldCenter;
+	return worldCenter;*/
 }
 
 /*
