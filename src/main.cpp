@@ -45,6 +45,11 @@ pixellight!
 #define EDGE_W		3
 #define EDGE_NONE	4
 
+#define NORM_N		1
+#define NORM_W		2
+#define NORM_S		3
+#define NORM_E		4
+
 #define PXPLIMIT	65535
 
 /*
@@ -58,6 +63,7 @@ typedef struct traceres
 	Vec2			dir;
 	float			d;
 	unsigned int	ccw;
+	int				norm;
 } traceres_t;
 
 typedef struct pxp
@@ -76,6 +82,7 @@ typedef struct pxp
 */
 unsigned int	frame;
 float			frametime;
+bool			particles = false;
 
 Vec2			v00 = Vec2(-1.0f, -1.0f);	// lower left
 Vec2			v10 = Vec2(1.0f, -1.0f);	// lower right
@@ -84,6 +91,7 @@ Vec2			v11 = Vec2(1.0f, 1.0f);		// upper right
 
 LevelNode *		root;
 Vec2			pos;
+Vec2			vel;
 unsigned int	ccw;
 
 pxp_t *			pxpdata;
@@ -95,6 +103,8 @@ unsigned int	texid;
 
 float			texv[] = { -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f };
 float			texc[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f };
+
+bool			ground = false;
 
 /*
 	dchr
@@ -214,6 +224,8 @@ inline void rot90(Vec2 & v, int ccwSteps)
 */
 inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t & out)
 {
+	int			tn	= 0;
+	int			hn	= 0;
 	Geom *		ge	= NULL;
 	LevelEdge *	ce	= NULL;
 	float		r	= dMax;
@@ -290,14 +302,15 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 			//std::cout << "geom ["<<x0<<","<<y0<<"] , ["<<x1<<","<<y1<<"]" << std::endl;
 
 			// test faces
-			if ((dir.y > 0.0f && rayline(pos, dir, g00, g10, ut, vt)) ||
-				(dir.x < 0.0f && rayline(pos, dir, g10, g11, ut, vt)) ||
-				(dir.y < 0.0f && rayline(pos, dir, g11, g01, ut, vt)) ||
-				(dir.x > 0.0f && rayline(pos, dir, g01, g00, ut, vt)))
+			if ((dir.y > 0.0f && rayline(pos, dir, g00, g10, ut, vt) && (tn = NORM_S) != 0) ||
+				(dir.x < 0.0f && rayline(pos, dir, g10, g11, ut, vt) && (tn = NORM_E) != 0) ||
+				(dir.y < 0.0f && rayline(pos, dir, g11, g01, ut, vt) && (tn = NORM_N) != 0) ||
+				(dir.x > 0.0f && rayline(pos, dir, g01, g00, ut, vt) && (tn = NORM_W) != 0))
 			{
 				if (ut <= r && (ge == NULL || ut < um))
 				{
 					ge = gbase;
+					hn = tn;
 					um = ut;
 				}
 			}
@@ -398,6 +411,12 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 				// decrement reach
 				r -= ut;
 
+				// hack hack, norm norm
+				if (ce->Node == NULL)
+				{
+					hn = co + 1;
+				}
+
 				// check for connecting node
 				if (ce->Node != NULL)
 				{
@@ -462,6 +481,7 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 	// write result
 	out.node	= node;
 	out.geom	= ge;
+	out.norm	= hn;
 	out.pos		= pos;
 	out.dir		= dir;
 	out.d		= dMax - r;
@@ -529,11 +549,11 @@ void pxp_step(float dt)
 */
 void pxp_plot()
 {
-	int		x;
-	int		y;
+	int x;
+	int y;
 
-	float	ex = static_cast<float>(TEXW>>1);
-	float	ey = static_cast<float>(TEXH>>1);
+	float ex = static_cast<float>(TEXW>>1);
+	float ey = static_cast<float>(TEXH>>1);
 
 	memset(texdata, 0, (TEXW*TEXH)<<2);
 
@@ -557,6 +577,106 @@ void pxp_plot()
 }
 
 /*
+	move_player
+*/
+void move_player()
+{
+	Vec2		acc;
+	float		len;
+	Vec2		dir;
+	float		dd;
+	traceres_t	tr;
+
+	// apply left/right acceleration
+	if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
+	{
+		acc.x -= ground ? 30.0f : 15.0f;
+	}
+	if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		acc.x += ground ? 30.0f : 15.0f;
+	}
+
+	// if on ground
+	if (ground)
+	{
+		// apply jump impulse
+		if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
+		{
+			acc.y += (6.0f / DT);
+		}
+	}
+	else
+	{
+		// apply some gravity in the air
+		acc.y -= 10.0f;
+	}
+
+	// transform acceleration into current space
+	rot90(acc, ccw);
+
+	// velocity intergration step
+	vel.x += DT * acc.x;
+	vel.y += DT * acc.y;
+
+	// apply some damping
+	if (ccw % 2 == 0)
+	{
+		vel.x *= 0.9f;
+	}
+	else
+	{
+		vel.y *= 0.9f;
+	}
+
+	// trace prepare!
+	len		= std::sqrt(vel.x*vel.x + vel.y*vel.y);
+	dir.x	= vel.x/len;
+	dir.y	= vel.y/len;
+	dd		= DT * len;
+
+	// trace execute!
+	trace(root, pos, dir, dd, tr);
+
+	// did we change root?
+	if (root != tr.node)
+	{
+		// in that case, space may have rotated
+		ccw = (ccw + tr.ccw) % 4;
+	}
+
+	// update stuff
+	root	= tr.node;
+	pos.x	= tr.pos.x;
+	pos.y	= tr.pos.y;
+
+	// transform velocity
+	rot90(vel, tr.ccw);
+
+	// clamp velocity
+	switch (tr.norm)
+	{
+	case NORM_N:
+	case NORM_S:
+		vel.y = 0.0f;
+		vel.x *= (dd - tr.d) / dd;
+		break;
+
+	case NORM_W:
+	case NORM_E:
+		vel.x = 0.0f;
+		vel.y *= (dd - tr.d) / dd;
+		break;
+	}
+
+	// update ground flag
+	ground = (((4+(tr.norm-1)-ccw)%4) + 1 == NORM_N);
+
+	// done?
+	;
+}
+
+/*
 	move_view
 */
 void move_view(Vec2 const & v)
@@ -570,7 +690,6 @@ void move_view(Vec2 const & v)
 	if (root != tr.node)
 	{
 		ccw = (ccw + tr.ccw) % 4;
-		std::cout << "changed room" << std::endl;
 	}
 
 	root	= tr.node;
@@ -610,6 +729,10 @@ void game()
 			break;
 		}
 
+		// move the player
+		move_player();
+
+		/*
 		// handle input
 		mov.x = 0.0f;
 		mov.y = 0.0f;
@@ -637,101 +760,112 @@ void game()
 		{
 			move_view(mov);
 		}
+		*/
+
+		// mooo
+		if (glfwGetKey(GLFW_KEY_BACKSPACE) == GLFW_PRESS)
+		{
+			particles = !particles;
+		}
 
 		// prep
 		glClear(GL_COLOR_BUFFER_BIT);
+		glColor3f(1.0f, 1.0f, 1.0f);
 
-		// move particles
-		pxp_step(DT);
-
-		// emit particles
-		for (unsigned int i = 0; i < RAYSFRAME; i++)
+		if (particles)
 		{
-			float a = theta*i + 0.6f*sin(15.0f*glfwGetTime());
+			// move particles
+			pxp_step(DT);
 
-			dir.x = cos(a);
-			dir.y = sin(a);
+			// emit particles
+			for (unsigned int i = 0; i < RAYSFRAME; i++)
+			{
+				float a = theta*i + 0.6f*sin(15.0f*static_cast<float>(glfwGetTime()));
 
-			trace(root, pos, dir, 15.0f, tr);
-			rot90(dir, 4-ccw);
+				dir.x = cos(a);
+				dir.y = sin(a);
 
-			float vel = 0.8f + 0.1f * (rand() % 50);
-			float ttl = (60.0f/vel) * tr.d;
+				trace(root, pos, dir, 15.0f, tr);
+				rot90(dir, 4-ccw);
 
-			pxp_emit(ttl, vel*scale*dir.x, vel*scale*dir.y, 0.0f, 0.0f, RANDRGB);
-		}
+				float spd = 0.8f + 0.1f * (rand() % 50);
+				float ttl = (60.0f/spd) * tr.d;
 
-		// plot particles
-		pxp_plot();
+				pxp_emit(static_cast<unsigned int>(ttl), spd*scale*dir.x, spd*scale*dir.y, 0.0f, 0.0f, RANDRGB);
+			}
 
-		// read frametime
-		frametime = static_cast<float>(glfwGetTime()) - frametime0;
+			// plot particles
+			pxp_plot();
 
-		// plot some text
-		sprintf(txt, "frame %d\nf/sec %d\n#free %d\n#live %d", frame, static_cast<unsigned int>(1.0f / frametime),
-			PXPLIMIT-pxppoolcursor, pxppoolcursor);
+			// read frametime
+			frametime = static_cast<float>(glfwGetTime()) - frametime0;
+
+			// plot some text
+			sprintf(txt, "frame %d\nf/sec %d\n#free %d\n#live %d", frame, static_cast<unsigned int>(1.0f / frametime),
+				PXPLIMIT-pxppoolcursor, pxppoolcursor);
 		
-		dstr(10, 10, txt, RGB(255,255,255));
+			dstr(10, 10, txt, RGB(255,255,255));
 
-		// draw plot
-		glEnable(GL_TEXTURE_2D);
-		{
-			glBindTexture(GL_TEXTURE_2D, texid);
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, TEXW, TEXH, GL_RGBA, GL_UNSIGNED_BYTE, texdata);
+			// draw plot
+			glEnable(GL_TEXTURE_2D);
+			{
+				glBindTexture(GL_TEXTURE_2D, texid);
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, TEXW, TEXH, GL_RGBA, GL_UNSIGNED_BYTE, texdata);
 
-			glEnableClientState(GL_VERTEX_ARRAY);
-			glVertexPointer(2, GL_FLOAT, 0, texv);
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-			glTexCoordPointer(2, GL_FLOAT, 0, texc);
+				glEnableClientState(GL_VERTEX_ARRAY);
+				glVertexPointer(2, GL_FLOAT, 0, texv);
+				glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+				glTexCoordPointer(2, GL_FLOAT, 0, texc);
 
-			glDrawArrays(GL_QUADS, 0, 4);
+				glDrawArrays(GL_QUADS, 0, 4);
 
-			glDisableClientState(GL_VERTEX_ARRAY);
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+				glDisableClientState(GL_VERTEX_ARRAY);
+				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+			}
+			glDisable(GL_TEXTURE_2D);
 		}
-		glDisable(GL_TEXTURE_2D);
-
-		/*
-		// draw some rays
-		for (unsigned int i = 0; i < RAYSFRAME; i++)
+		else
 		{
-			dir.x = cos(theta * i);
-			dir.y = sin(theta * i);
+			// draw some rays
+			for (unsigned int i = 0; i < RAYSFRAME; i++)
+			{
+				dir.x = cos(theta * i);
+				dir.y = sin(theta * i);
 
-			trace(root, pos, dir, 15.0f, tr);
+				trace(root, pos, dir, 15.0f, tr);
 
-			rot90(dir, 4-ccw);
+				rot90(dir, 4-ccw);
 
-			glColor3f(1.0f, 1.0f, 1.0f);
-			glBegin(GL_LINES);
+				glColor3f(1.0f, 1.0f, 1.0f);
+				glBegin(GL_LINES);
+				{
+					glVertex2f(0.0f, 0.0f);
+					glVertex2f(scale*tr.d*dir.x, scale*tr.d*dir.y);
+				}
+				glEnd();
+			}
+
+			//// blend in some debug stuff
+			//glPushMatrix();
+			//{
+			//	glScalef(scale, scale, 1.0f);
+
+			//	glEnable(GL_BLEND);
+			//	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+			//	root->Draw(pos);
+			//	glDisable(GL_BLEND);
+			//}
+			//glPopMatrix();
+
+			// draw an avatar
+			glColor3f(1.0f, 0.0f, 0.0f);
+			glPointSize(3.0f);
+			glBegin(GL_POINTS);
 			{
 				glVertex2f(0.0f, 0.0f);
-				glVertex2f(scale*tr.d*dir.x, scale*tr.d*dir.y);
 			}
 			glEnd();
 		}
-
-		// blend in some debug stuff
-		glPushMatrix();
-		{
-			glScalef(scale, scale, 1.0f);
-
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-			root->Draw(pos);
-			glDisable(GL_BLEND);
-		}
-		glPopMatrix();
-
-		// draw an avatar
-		glColor3f(1.0f, 0.0f, 0.0f);
-		glPointSize(3.0f);
-		glBegin(GL_POINTS);
-		{
-			glVertex2f(0.0f, 0.0f);
-		}
-		glEnd();
-		*/
 
 		// swap
 		glfwSwapBuffers();
@@ -752,7 +886,6 @@ void editor()
 {
 	float		step = (2.0f * 3.14f) / static_cast<float>(RAYSFRAME);
 	Vec2		dir;
-	char		str[100];
 	traceres_t	tr;
 
 	root = LevelLoader::LoadXml(0);
