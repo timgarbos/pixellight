@@ -112,10 +112,9 @@ typedef struct traceres
 */
 inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t & out)
 {
-	LevelEdge *	ce	= NULL;
 	Geom *		ge	= NULL;
+	LevelEdge *	ce	= NULL;
 	float		r	= dMax;
-	bool		f	= false;
 	int			c	= 0;
 
 	float		ut;	// distance to intersection in trace direction
@@ -152,20 +151,65 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 	// loop until the maximum distance has been reached, or no more nodes
 	while (r > 0.0f && node != NULL)
 	{
+		float um;
+
 #if TRACEDEBUG
 		std::cout << "node " << node << std::endl;
 #endif
-
-		// find nearest intersection with local geometry
-		//TODO
 
 		if (++c > 10)
 		{
 			break;
 		}
 
-		// if unsuccessful, then move towards node boundary
-		if (!f)
+		// find nearest intersection with local geometry
+		for (std::list<GeomInstance *>::iterator it = node->objs.begin(); it != node->objs.end(); it++)
+		{
+			GeomInstance *	g		= *it;
+			Vec2 const &	gpos	= g->pos;
+			Geom *			gbase	= g->masterGeom;
+			Vec2 const &	gext	= gbase->extends;
+
+			// we only care about region inside current node
+			float x0 = std::max(gpos.x-gext.x, -1.0f);
+			float x1 = std::min(gpos.x+gext.x, 1.0f);
+			float y0 = std::max(gpos.y-gext.y, -1.0f);
+			float y1 = std::min(gpos.y+gext.y, 1.0f);
+
+			// assemble into vertices
+			Vec2 g00(x0, y0);
+			Vec2 g10(x1, y0);
+			Vec2 g01(x0, y1);
+			Vec2 g11(y1, y1);
+
+			// test edges
+			if ((dir.y > 0.0f && rayline(pos, dir, g00, g10, ut, vt)) ||
+				(dir.x < 0.0f && rayline(pos, dir, g10, g11, ut, vt)) ||
+				(dir.y > 0.0f && rayline(pos, dir, g11, g01, ut, vt)) ||
+				(dir.x > 0.0f && rayline(pos, dir, g01, g00, ut, vt)))
+			{
+				if (ut <= r && (ge == NULL || ut < um))
+				{
+					ge = gbase;
+					um = ut;
+				}
+			}
+		}
+
+		// if an intersection was found with local geometry, then move there
+		if (ge != NULL)
+		{
+			// ray transfer to intersection with geometry
+			pos.x += um*dir.x;
+			pos.y += um*dir.y;
+
+			// decrement reach
+			r -= um;
+
+			// halt
+			break;
+		}
+		else// if not intersecting local geometry, then move towards node boundary
 		{
 			// pick connecting edge
 			if (ci != EDGE_S && rayline(pos, dir, v00, v10, ut, vt))
@@ -228,18 +272,21 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 			std::cout << "   dir = " << dir.x << ", " << dir.y << std::endl;
 #endif
 
-			// ray transfer
+			// test if we reached node boundary
 			if (ut > r)
 			{
-				// did not reach edge
-				pos.x = pos.x + r*dir.x;
-				pos.y = pos.y + r*dir.y;
+				// ray transfer to point of reach
+				pos.x += r*dir.x;
+				pos.y += r*dir.y;
+
+				// exhaust reach
+				r = 0.0f;
 			}
 			else
 			{
-				// reached edge
-				pos.x = pos.x + ut*dir.x;
-				pos.y = pos.y + ut*dir.y;
+				// ray transfer to intersection with node boundary
+				pos.x += ut*dir.x;
+				pos.y += ut*dir.y;
 
 				// decrement reach
 				r -= ut;
@@ -294,7 +341,7 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 				}
 			}
 
-			// moved towards node boundary
+			// crossed node boundary
 			;
 		}
 
@@ -365,19 +412,19 @@ void game()
 		// handle input
 		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
-			move_view(Vec2(-0.01f, 0.0f));
+			move_view(Vec2(-0.1f, 0.0f));
 		}
 		else if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.01f, 0.0f));
+			move_view(Vec2(0.1f, 0.0f));
 		}
 		else if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.0f, 0.01f));
+			move_view(Vec2(0.0f, 0.1f));
 		}
 		else if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.0f, -0.01f));
+			move_view(Vec2(0.0f, -0.1f));
 		}
 
 		// prep
