@@ -164,7 +164,7 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 		}
 
 		// find nearest intersection with local geometry
-		for (std::list<GeomInstance *>::iterator it = node->objs.begin(); it != node->objs.end(); it++)
+		/*for (std::list<GeomInstance *>::iterator it = node->objs.begin(); it != node->objs.end(); it++)
 		{
 			GeomInstance *	g		= *it;
 			Vec2 const &	gpos	= g->pos;
@@ -196,6 +196,7 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 				}
 			}
 		}
+		*/
 
 		// if an intersection was found with local geometry, then move there
 		if (ge != NULL)
