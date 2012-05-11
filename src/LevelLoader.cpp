@@ -11,7 +11,7 @@ LevelLoader::~LevelLoader(void)
 }
 
 
-LevelNode* LevelLoader::LoadXml()
+LevelNode* LevelLoader::LoadXml(int index)
 {
 	LevelNode* rootNode = NULL;
 	XMLDocument* doc = new XMLDocument();
@@ -27,9 +27,10 @@ LevelNode* LevelLoader::LoadXml()
 	XMLNode* levels = doc->FirstChild()->ToElement();
 	XMLNode * level;
 	
-	for( level = levels->FirstChild(); level; level = level->NextSibling() )
-	{
-		
+	level = levels->FirstChild();
+	for(int i=0;i<index;i++)
+		levels->NextSibling();
+	
 		//To make relations easy we create a list of all the nodes, in order to later connect them
 		vector<LevelNode*> levelNodes;
 
@@ -107,12 +108,8 @@ LevelNode* LevelLoader::LoadXml()
 				break;
 			}
 		}
-		
-
-
 		printf("\n LOADED LEVEL \n",0);
-		
-	}
+
 	delete doc;
 	return rootNode;
 }

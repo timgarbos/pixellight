@@ -15,6 +15,6 @@ public:
 	LevelLoader(void);
 	~LevelLoader(void);
 
-	static LevelNode* LoadXml();
+	static LevelNode* LoadXml(int level);
 };
 

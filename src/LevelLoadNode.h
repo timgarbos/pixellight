@@ -8,7 +8,10 @@ public:
 	LevelLoadNode(LevelNode* node);
 	~LevelLoadNode(void);
 
+	
+
 	int e,w,n,s;
 	LevelNode* node;
+
 };
 
