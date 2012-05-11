@@ -57,7 +57,7 @@ void LevelNode::CreateRandomWorld(int depth)
 }
 
 
-void LevelNode::Draw()
+void LevelNode::Draw(Vec2 pos)
 {
 
 	//first let's draw the node
@@ -65,11 +65,11 @@ void LevelNode::Draw()
 	glColor3f(0.2f, 0.2f, 0.2f);
 	glBegin(GL_QUADS);
 	{
-		glVertex2f(0.0f, 0.0f);
-		glVertex2f(1.0,0.0f);
-		glVertex2f(1.0,1.0f);
-		glVertex2f(0.0,1.0f);
-		glVertex2f(0.0f, 0.0f);
+		glVertex2f(-pos.x+0.0f, -pos.y+0.0f);
+		glVertex2f(-pos.x+1.0,-pos.y+0.0f);
+		glVertex2f(-pos.x+1.0,-pos.y+1.0f);
+		glVertex2f(-pos.x+0.0,-pos.y+1.0f);
+		glVertex2f(-pos.x+0.0f, -pos.y+0.0f);
 	}
 	glEnd();
 	
@@ -85,16 +85,16 @@ void LevelNode::Draw()
 
 		glBegin(GL_QUADS);
 		{
-			glVertex2f(0.5f+geom->pos.x-geom->masterGeom->extends.x, 
-				0.5f+geom->pos.y-geom->masterGeom->extends.y);
-			glVertex2f(0.5f+geom->pos.x+geom->masterGeom->extends.x, 
-				0.5f+geom->pos.y-geom->masterGeom->extends.y);
-			glVertex2f(0.5f+geom->pos.x+geom->masterGeom->extends.x, 
-				0.5f+geom->pos.y+geom->masterGeom->extends.y);
-			glVertex2f(0.5f+geom->pos.x-geom->masterGeom->extends.x, 
-				0.5f+geom->pos.y+geom->masterGeom->extends.y);
-			glVertex2f(0.5f+geom->pos.x-geom->masterGeom->extends.x, 
-				0.5f+geom->pos.y-geom->masterGeom->extends.y);
+			glVertex2f(-pos.x+0.5f+geom->pos.x-geom->masterGeom->extends.x, 
+				-pos.y+0.5f+geom->pos.y-geom->masterGeom->extends.y);
+			glVertex2f(-pos.x+0.5f+geom->pos.x+geom->masterGeom->extends.x, 
+				-pos.y+0.5f+geom->pos.y-geom->masterGeom->extends.y);
+			glVertex2f(-pos.x+0.5f+geom->pos.x+geom->masterGeom->extends.x, 
+				-pos.y+0.5f+geom->pos.y+geom->masterGeom->extends.y);
+			glVertex2f(-pos.x+0.5f+geom->pos.x-geom->masterGeom->extends.x, 
+				-pos.y+0.5f+geom->pos.y+geom->masterGeom->extends.y);
+			glVertex2f(-pos.x+0.5f+geom->pos.x-geom->masterGeom->extends.x, 
+				-pos.y+0.5f+geom->pos.y-geom->masterGeom->extends.y);
 		}
 		glEnd();
 	}

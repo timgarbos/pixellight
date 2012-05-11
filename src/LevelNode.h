@@ -19,7 +19,7 @@ public:
 	LevelNode(void);
 	~LevelNode(void);
 	void CreateRandomWorld(int depth);
-	void Draw();
+	void Draw(Vec2 pos);
 	LevelEdge *w;
 	LevelEdge *e;
 	LevelEdge *n;

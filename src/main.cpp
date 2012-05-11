@@ -26,7 +26,7 @@ pixellight!
 #define WINW		512
 #define WINH		512
 
-#define RAYSFRAME	100
+#define RAYSFRAME	50
 #define TRACEDEBUG	0
 
 #define EDGE_S		0
@@ -366,25 +366,28 @@ void game()
 		// handle input
 		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
-			move_view(Vec2(-0.01f, 0.0f));
+			move_view(Vec2(-0.0001f, 0.0f));
 		}
 		else if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.01f, 0.0f));
+			move_view(Vec2(0.0001f, 0.0f));
 		}
 		else if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.0f, 0.01f));
+			move_view(Vec2(0.0f, 0.0001f));
 		}
 		else if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.0f, -0.01f));
+			move_view(Vec2(0.0f, -0.0001f));
 		}
 
 		// prep
 		glClear(GL_COLOR_BUFFER_BIT);
 		glLoadIdentity();
 		glScalef(0.1f, 0.1f, 0.1f);
+
+		glColor3f(1.0f, 1.0f, 1.0f);
+		root->Draw(pos);
 		glColor3f(1.0f, 1.0f, 1.0f);
 
 		// draw some rays
@@ -456,7 +459,7 @@ void editor()
 		glScalef(0.3f, 0.3f, 0.3f);
 		glColor3f(1.0f, 1.0f, 1.0f);
 
-		root->Draw();
+		root->Draw(pos);
 
 		// draw some rays
 		/*for (unsigned int i = 0; i < RAYSFRAME; i++)
