@@ -24,8 +24,8 @@ pixellight!
 /*
 	MACROS
 */
-#define WINW		768
-#define WINH		768
+#define WINW		512
+#define WINH		512
 #define TEXW		256
 #define TEXH		256
 
@@ -537,7 +537,7 @@ void pxp_plot()
 
 	memset(texdata, 0, (TEXW*TEXH)<<2);
 
-	#pragma omp parallel for
+	//#pragma omp parallel for
 	for (int i = 0; i < PXPLIMIT; i++)
 	{
 		pxp const & p = pxpdata[i];
@@ -733,6 +733,12 @@ void game()
 		// swap
 		glfwSwapBuffers();
 
+		// wait a bit if not in sync
+		while (glfwGetTime() - frametime0 < DT - (1e-7))
+		{
+			glfwSleep(0.0001f);// sleep 0.1ms
+		}
+
 		// next frame
 		;
 	}
@@ -834,7 +840,7 @@ int main(int argc, char * argv[])
 	pxpdata	= new pxp_t[PXPLIMIT];
 	pxppool	= new unsigned int[PXPLIMIT];
 
-	#pragma omp parallel for
+	//#pragma omp parallel for
 	for (int i = 0; i < PXPLIMIT; i++)
 	{
 		pxpdata[i].ttl	= 0;
