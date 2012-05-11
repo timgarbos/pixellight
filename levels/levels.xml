@@ -7,6 +7,7 @@
         <edge start="2" end="1" side="2" ccw="0"/>
         <edge start="0" end="1" side="1" ccw="0"/>
         <edge start="2" end="10" side="0" ccw="1"/>
+        <edge start="10" end="0" side="1" ccw="3"/>
         
       </level>
 
@@ -34,59 +35,59 @@
        
       </objects>
     </node>
-    <node >
+    <node  r="200" g="50" b="50" m="5">
       <objects>
 
       </objects>
     </node>
 
-    <node >
+    <node  r="200" g="50" b="50" m="5">
       <objects>
 
       </objects>
     </node>
 
-    <node >
+    <node  r="200" g="50" b="50" m="5">
       <objects>
 
       </objects>
     </node>
 
-    <node >
+    <node  r="200" g="50" b="50" m="5">
       <objects>
 
       </objects>
     </node>
 
 
-    <node >
-      <objects>
-        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1"/>
-      </objects>
-    </node>
-    <node >
+    <node  r="50" g="200" b="50" m="5">
       <objects>
         <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1"/>
       </objects>
     </node>
-    <node >
+    <node  r="50" g="200" b="50" m="5">
       <objects>
         <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1"/>
       </objects>
     </node>
-    <node >
+    <node  r="50" g="200" b="50" m="5">
       <objects>
         <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1"/>
       </objects>
     </node>
-    <node >
+    <node  r="50" g="200" b="50" m="5">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1"/>
+      </objects>
+    </node>
+    <node  r="50" g="200" b="50" m="5">
       <objects>
         <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1"/>
       </objects>
     </node>
 
 
-    <node >
+    <node  r="50" g="50" b="200" m="1">
       <objects>
         <object x="0.5f" y="0.5f" extendsX="0.2f" extendsY="0.2f" type="1"/>
       </objects>

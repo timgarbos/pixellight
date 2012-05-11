@@ -26,17 +26,24 @@ pixellight!
 */
 #define WINW		512
 #define WINH		512
-#define TEXW		256
-#define TEXH		256
+#define TEXW		512
+#define TEXH		512
 
 #define TX(x,y)		(texdata + (x) + (y)*TEXW)
 #define FF(n)		(n & 0xff)
 #define RGB(r,g,b)	(0xff000000 | (FF(b)<<16) | (FF(g)<<8) | (FF(r)))
 #define RANDRGB		(RGB(rand()%256,rand()%256,rand()%256))
+#define RANDRGB2(r,g,b,mod)	(RGB(max(0,min(255,r+rand()%mod)),max(0,min(255,g+rand()%mod)),max(0,min(255,b+rand()%mod))))
 
 #define DT			0.01666667f
 #define PI			3.14159265f
-#define RAYSFRAME	500
+
+#define RAYSFRAME			3100
+#define RAYSFRAMEDEV		1500
+
+#define PARTICLESFRAME		1000
+#define PARTICLESFRAMEDEV	800
+
 #define TRACEDEBUG	0
 
 #define EDGE_S		0
@@ -52,6 +59,8 @@ pixellight!
 
 #define PXPLIMIT	65535
 
+int RaysPerFrame = RAYSFRAME;
+int ParticlesPerFrame = PARTICLESFRAME;
 /*
 	typedefs
 */
@@ -697,6 +706,16 @@ void move_view(Vec2 const & v)
 	pos.y	= tr.pos.y;
 }
 
+void capFramerate(double fps) {
+    static double start = 0, diff, wait;
+    wait = 1 / fps;
+    diff = glfwGetTime() - start;
+    if (diff < wait) {
+        glfwSleep(wait - diff);
+    }
+    start = glfwGetTime();
+}
+
 /*
 	game
 */
@@ -704,7 +723,8 @@ void game()
 {
 	float		frametime0;
 	float		scale = 0.3f;
-	float		theta = (2.0f * PI) / static_cast<float>(RAYSFRAME);
+	float		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
+	float		particleTheta = (2.0f * PI) / static_cast<float>(PARTICLESFRAME);
 	char		txt[100];
 	Vec2		mov;
 	Vec2		dir;
@@ -719,6 +739,11 @@ void game()
 	{
 		frame++;
 		frametime0 = static_cast<float>(glfwGetTime());
+
+		RaysPerFrame = RAYSFRAME+RAYSFRAMEDEV*sin(glfwGetTime()*5.0f);
+		ParticlesPerFrame = PARTICLESFRAME+PARTICLESFRAMEDEV*sin(PI+glfwGetTime()*5.0f);
+		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
+		particleTheta = (2.0f * PI) / static_cast<float>(ParticlesPerFrame);
 
 		// poll input
 		glfwPollEvents();
@@ -772,115 +797,88 @@ void game()
 		glClear(GL_COLOR_BUFFER_BIT);
 		glColor3f(1.0f, 1.0f, 1.0f);
 
-		if (particles)
+		// move particles
+		pxp_step(DT);
+
+		// emit particles
+		for (unsigned int i = 0; i < ParticlesPerFrame; i++)
 		{
-			// move particles
-			pxp_step(DT);
+			float a = particleTheta*i + 0.6f*sin(15.0f*glfwGetTime());
 
-			// emit particles
-			for (unsigned int i = 0; i < RAYSFRAME; i++)
-			{
-				float a = theta*i + 0.6f*sin(15.0f*static_cast<float>(glfwGetTime()));
+			dir.x = cos(a);
+			dir.y = sin(a);
 
-				dir.x = cos(a);
-				dir.y = sin(a);
+			trace(root, pos, dir, 15.0f, tr);
+			rot90(dir, 4-ccw);
 
-				trace(root, pos, dir, 15.0f, tr);
-				rot90(dir, 4-ccw);
+			float spd = 0.9f + 0.3f * (rand() % 50);
+			float ttl = (60.0f/spd) * tr.d;
 
-				float spd = 0.8f + 0.1f * (rand() % 50);
-				float ttl = (60.0f/spd) * tr.d;
-
-				pxp_emit(static_cast<unsigned int>(ttl), spd*scale*dir.x, spd*scale*dir.y, 0.0f, 0.0f, RANDRGB);
-			}
-
-			// plot particles
-			pxp_plot();
-
-			// read frametime
-			frametime = static_cast<float>(glfwGetTime()) - frametime0;
-
-			// plot some text
-			sprintf(txt, "frame %d\nf/sec %d\n#free %d\n#live %d", frame, static_cast<unsigned int>(1.0f / frametime),
-				PXPLIMIT-pxppoolcursor, pxppoolcursor);
-		
-			dstr(10, 10, txt, RGB(255,255,255));
-
-			// draw plot
-			glEnable(GL_TEXTURE_2D);
-			{
-				glBindTexture(GL_TEXTURE_2D, texid);
-				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, TEXW, TEXH, GL_RGBA, GL_UNSIGNED_BYTE, texdata);
-
-				glEnableClientState(GL_VERTEX_ARRAY);
-				glVertexPointer(2, GL_FLOAT, 0, texv);
-				glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-				glTexCoordPointer(2, GL_FLOAT, 0, texc);
-
-				glDrawArrays(GL_QUADS, 0, 4);
-
-				glDisableClientState(GL_VERTEX_ARRAY);
-				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-			}
-			glDisable(GL_TEXTURE_2D);
+			pxp_emit(static_cast<unsigned int>(ttl), spd*scale*dir.x, spd*scale*dir.y, 0.0f, 0.0f, i%root->colorMod==0?RANDRGB2(root->colorR,root->colorG,root->colorB,80):RANDRGB);
 		}
-		else
+
+		// plot particles
+		pxp_plot();
+
+		// read frametime
+		frametime = static_cast<float>(glfwGetTime()) - frametime0;
+
+		// plot some text
+		sprintf(txt, "frame %d\nf/sec %d\n#free %d\n#live %d", frame, static_cast<unsigned int>(1.0f / frametime),
+			PXPLIMIT-pxppoolcursor, pxppoolcursor);
+		
+		dstr(10, 10, txt, RGB(255,255,255));
+
+		// draw plot
+		glEnable(GL_TEXTURE_2D);
 		{
-			// draw some rays
-			for (unsigned int i = 0; i < RAYSFRAME; i++)
-			{
-				dir.x = cos(theta * i);
-				dir.y = sin(theta * i);
+			glBindTexture(GL_TEXTURE_2D, texid);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, TEXW, TEXH, GL_RGBA, GL_UNSIGNED_BYTE, texdata);
 
-				trace(root, pos, dir, 15.0f, tr);
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glVertexPointer(2, GL_FLOAT, 0, texv);
+			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+			glTexCoordPointer(2, GL_FLOAT, 0, texc);
 
-				rot90(dir, 4-ccw);
+			glDrawArrays(GL_QUADS, 0, 4);
 
-				glColor3f(1.0f, 1.0f, 1.0f);
-				glBegin(GL_LINES);
-				{
-					glVertex2f(0.0f, 0.0f);
-					glVertex2f(scale*tr.d*dir.x, scale*tr.d*dir.y);
-				}
-				glEnd();
-			}
+			glDisableClientState(GL_VERTEX_ARRAY);
+			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		}
+		glDisable(GL_TEXTURE_2D);
+		
+		// draw some rays
+		glColor4f(1.0f, 1.0f, 1.0f, 0.005f);
+		glLineWidth(25.0f);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-			//// blend in some debug stuff
-			//glPushMatrix();
-			//{
-			//	glScalef(scale, scale, 1.0f);
+		for (unsigned int i = 0; i < RaysPerFrame; i++)
+		{
+			dir.x = cos(theta * i);
+			dir.y = sin(theta * i);
 
-			//	glEnable(GL_BLEND);
-			//	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-			//	root->Draw(pos);
-			//	glDisable(GL_BLEND);
-			//}
-			//glPopMatrix();
+			trace(root, pos, dir, 15.0f, tr);
 
-			// draw an avatar
-			glColor3f(1.0f, 0.0f, 0.0f);
-			glPointSize(3.0f);
-			glBegin(GL_POINTS);
+			rot90(dir, 4-ccw);
+
+			glBegin(GL_LINES);
 			{
 				glVertex2f(0.0f, 0.0f);
+				glVertex2f(scale*tr.d*dir.x, scale*tr.d*dir.y);
 			}
 			glEnd();
 		}
 
+		glDisable(GL_BLEND);
+
 		// swap
 		glfwSwapBuffers();
 
-		//// wait a bit if not in sync
-		//while (glfwGetTime() - frametime0 < DT - (1e-7))
-		//{
-		//	glfwSleep(0.0001f);// sleep 0.1ms
-		//}
-
 		// next frame
-		;
+		capFramerate(60.0);
 	}
 }
-
 
 void editor()
 {
