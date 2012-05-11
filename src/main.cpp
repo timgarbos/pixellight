@@ -400,6 +400,41 @@ void move_view(Vec2 const & v)
 	ccw		= (ccw + tr.ccw) % 4;
 }
 
+GeomInstance* currentGeom;
+bool selectedGeom;
+int currentLevel = 0;
+void HandleEditorInput()
+{
+	if (glfwGetKey('0') == GLFW_PRESS)
+	{
+		currentLevel = 0;
+
+	}
+	if (glfwGetKey('1') == GLFW_PRESS)
+	{
+		currentLevel = 1;
+		
+
+	}
+			
+	if (glfwGetKey('2') == GLFW_PRESS)
+	{
+		currentLevel = 2;
+	}
+	if (glfwGetKey('3') == GLFW_PRESS)
+	{
+		currentLevel = 3;
+
+	}
+	if (glfwGetKey('R') == GLFW_PRESS)
+	{
+		root = LevelLoader::LoadXml(currentLevel);
+		pos.x =0;
+		pos.y=0;
+	}
+		
+}
+
 /*
 	game
 */
@@ -431,7 +466,10 @@ void game()
 
 		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
-			mov.x -= 0.1f;
+			if(selectedGeom)
+				currentGeom->pos.x +=0.1f;
+			else
+				mov.x -= 0.1f;
 		}
 		else if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
@@ -478,7 +516,18 @@ void game()
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 		root->Draw(pos);
+
 		glDisable(GL_BLEND);
+
+		//update level editor input
+		HandleEditorInput();
+		glBegin(GL_LINES);
+		{
+			glColor3f(1.0f, 0.0f, 0.0f);
+			glVertex2f(0.0f, 0.0f);
+			glVertex2f(0.01f, 0.0f);
+		}
+		glEnd();
 
 		// swap
 		glfwSwapBuffers();
@@ -488,7 +537,7 @@ void game()
 	}
 }
 
-
+bool keyDown = false;
 void editor()
 {
 	float		step = (2.0f * 3.14f) / static_cast<float>(RAYSFRAME);
@@ -510,22 +559,39 @@ void editor()
 		}
 
 		// handle input
+		
+		
 		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
-			move_view(Vec2(-0.01f, 0.0f));
+			if(selectedGeom)
+				currentGeom->pos.x -=0.0001f;
+			else
+				move_view(Vec2(-0.0001f, 0.0f));
 		}
-		else if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
+		else if (!keyDown && glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.01f, 0.0f));
+			if(selectedGeom)
+				currentGeom->pos.x +=0.0001f;
+			else
+				move_view(Vec2(0.0001f, 0.0f));
 		}
-		else if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
+		else if (!keyDown && glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.0f, 0.01f));
+			if(selectedGeom)
+				currentGeom->pos.y +=0.0001f;
+			else
+				move_view(Vec2(0.0f, 0.0001f));
 		}
-		else if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
+		else if (!keyDown && glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.0f, -0.01f));
+			if(selectedGeom)
+				currentGeom->pos.y -=0.0001f;
+			else
+				move_view(Vec2(0.0f, -0.0001f));
 		}
+
+		//update level editor input
+		HandleEditorInput();
 
 		// prep
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -534,22 +600,65 @@ void editor()
 		glColor3f(1.0f, 1.0f, 1.0f);
 
 		root->Draw(pos);
-
-		// draw some rays
-		/*for (unsigned int i = 0; i < RAYSFRAME; i++)
+		//update level editor input
+		HandleEditorInput();
+		glBegin(GL_LINES);
 		{
-			dir.x = cos(step * i);
-			dir.y = sin(step * i);
+			glColor3f(1.0f, 1.0f, 1.0f);
+			glVertex2f(0.0f, 0.0f);
+			glVertex2f(0.01f, 0.0f);
+		}
+		glEnd();
 
-			trace(root, pos, dir, 20.0f, tr);
 
-			glBegin(GL_LINES);
-			{
-				glVertex2f(0.0f, 0.0f);
-				glVertex2f(tr.d*dir.x, tr.d*dir.y);
-			}
-			glEnd();
-		}*/
+		//draw west
+		glBegin(GL_LINES);
+		{
+			if(root->w->Node !=NULL)
+				glColor3f(0.0f, 1.0f, 0.3f);
+			else
+				glColor3f(1.0f, 0.0f, 0.3f);
+
+			glVertex2f(-2.0f, 0.0f);
+			glVertex2f(0.0f, 0.0f);
+		}
+		glEnd();
+		//draw east
+		glBegin(GL_LINES);
+		{
+			if(root->e->Node !=NULL)
+				glColor3f(0.0f, 1.0f, 0.3f);
+			else
+				glColor3f(1.0f, 0.0f, 0.3f);
+
+			glVertex2f(2.0f, 0.0f);
+			glVertex2f(0.0f, 0.0f);
+		}
+		glEnd();
+		//draw north
+		glBegin(GL_LINES);
+		{
+			if(root->n->Node !=NULL)
+				glColor3f(0.0f, 1.0f, 0.3f);
+			else
+				glColor3f(1.0f, 0.0f, 0.3f);
+
+			glVertex2f(0.0f, 2.0f);
+			glVertex2f(0.0f, 0.0f);
+		}
+		glEnd();
+		//draw south
+		glBegin(GL_LINES);
+		{
+			if(root->s->Node !=NULL)
+				glColor3f(0.0f, 1.0f, 0.3f);
+			else
+				glColor3f(1.0f, 0.0f, 0.3f);
+
+			glVertex2f(0.0f, -2.0f);
+			glVertex2f(0.0f, 0.0f);
+		}
+		glEnd();
 
 		// swap
 		glfwSwapBuffers();
