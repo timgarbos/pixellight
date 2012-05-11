@@ -24,7 +24,8 @@ pixellight!
 */
 #define WINW		512
 #define WINH		512
-#define RAYSFRAME	50
+#define RAYSFRAME	1000
+#define TRACEDEBUG	0
 
 /*
 	globals
@@ -52,10 +53,10 @@ inline bool rayline(Vec2 const & u0, Vec2 const & ud, Vec2 const & v0, Vec2 cons
 		float const a = r * (v0.y - u0.y);
 		float const b = r * (u0.x - v0.x);
 
-		ut	= vdx*a + vdy*b;
-		vt	= ud.x*a + ud.y*b;
+		ut = vdx*a + vdy*b;
+		vt = ud.x*a + ud.y*b;
 
-		return (ut > (0.0f + 1e-7/* f32 epsilon */) && vt >= 0.0f && vt <= 1.0f);
+		return (ut > 0.0f && vt >= 0.0f && vt <= 1.0f);
 	}
 	else
 	{
@@ -88,118 +89,175 @@ inline void rot90(Vec2 & v, int ccwSteps)
 }
 
 /*
+	traceres_t
+*/
+typedef struct traceres
+{
+	LevelNode	*	node;
+	Geom *			geom;
+	Vec2			pos;
+	Vec2			dir;
+	float			d;
+} traceres_t;
+
+/*
 	trace
 */
-inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut, Geom * & geom, LevelNode * & dest, Vec2 & npos)
+inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t & out)
 {
-	int c = 0;
-	LevelEdge *	ce = NULL;
-	Vec2		x;
-	float		sx;
-	float		sy;
-	float		ut;	// distance along trace direction
-	float		vt;	// distance along edge
-	float		d = 0.0f;
-	bool		f = false;
+	LevelEdge *	ce	= NULL;
+	Geom *		ge	= NULL;
+	float		r	= dMax;
+	bool		f	= false;
+	int			c	= 0;
 
-	//std::cout << "-- new trace" << std::endl;
+	float		ut;	// distance to intersection in trace direction
+	float		vt;	// distance to intersection in edge
+	float		sx;	// sign of x-component after moving node
+	float		sy; // sign of y-component after moving node
 
-	// assume no node changes
-	dest = node;
+#if TRACEDEBUG
+	std::cout << "--- new trace" << std::endl;
+#endif
 
 	// loop until the maximum distance has been reached, or no more nodes
-	while ((d < dMax) && node != NULL)
+	while (r > 0.0f && node != NULL)
 	{
-		//std::cout << "node = " << node << std::endl;
+#if TRACEDEBUG
+		std::cout << "node " << node << std::endl;
+#endif
+
 		// find nearest intersection with local geometry
 		//TODO
-		//if (++c > 10)
-		//{
-		//	break;
-		//}
 
-		// if unsuccessful, then find intersection with node boundary
+		if (++c > 10)
+		{
+			break;
+		}
+
+		// if unsuccessful, then move towards node boundary
 		if (!f)
 		{
-			// transfer to edge
+			// pick connecting edge
 			if (rayline(pos, dir, v00, v10, ut, vt))
 			{
-				//std::cout << "south, ut = " << ut << std::endl;
-				ce		= node->s;// => south
-				pos.x	= pos.x + ut*dir.x;
-				pos.y	= -1.0f;
-				sx		= 1.0f;
-				sy		= -1.0f;
+#if TRACEDEBUG
+				std::cout << "going south" << std::endl;
+#endif
+				// south
+				ce = node->s;
+				sx = 1.0f;
+				sy = -1.0f;
 			}
 			else if (rayline(pos, dir, v10, v11, ut, vt))
 			{
-				//std::cout << "east, ut = " << ut << std::endl;
-				ce		= node->e;// => east
-				pos.x	= 1.0f;
-				pos.y	= pos.y + ut*dir.y;
-				sx		= -1.0f;
-				sy		= 1.0f;
+#if TRACEDEBUG
+				std::cout << "going east" << std::endl;
+#endif
+				// east
+				ce = node->e;
+				sx = -1.0f;
+				sy = 1.0f;
 			}
 			else if (rayline(pos, dir, v11, v01, ut, vt))
 			{
-				//std::cout << "north, ut = " << ut << std::endl;
-				ce		= node->n;// => north
-				pos.x	= pos.x + ut*dir.x;
-				pos.y	= 1.0f;
-				sx		= 1.0f;
-				sy		= -1.0f;
+#if TRACEDEBUG
+				std::cout << "going north" << std::endl;
+#endif
+				// north
+				ce = node->n;
+				sx = 1.0f;
+				sy = -1.0f;
 			}
 			else if (rayline(pos, dir, v01, v00, ut, vt))
 			{
-				//std::cout << "west, ut = " << ut << std::endl;
-				ce		= node->w;// => west
-				pos.x	= -1.0f;
-				pos.y	= pos.y + ut*dir.y;
-				sx		= -1.0f;
-				sy		= 1.0f;
-			}
-
-			// transform position
-			rot90(pos, ce->ccwSteps);
-
-			if ((ce->ccwSteps % 2) == 0)
-			{
-				pos.x *= sx;
-				pos.y *= sy;
+#if TRACEDEBUG
+				std::cout << "going west" << std::endl;
+#endif
+				// west
+				ce = node->w;
+				sx = -1.0f;
+				sy = 1.0f;
 			}
 			else
 			{
-				pos.x *= sy;
-				pos.y *= sx;
+#if TRACEDEBUG
+				std::cout << "going nowhere" << std::endl;
+#endif
+				// halt if trying to cross edge from whence we came
+				break;
 			}
 
-			//std::cout << "dir " << dir.x << ", " << dir.y << std::endl;
-			//std::cout << "pos " << pos.x << ", " << pos.y << std::endl;
+#if TRACEDEBUG
+			std::cout << "   r   = " << r << std::endl;
+			std::cout << "   ut  = " << ut << std::endl;
+			std::cout << "   pos = " << pos.x << ", " << pos.y << std::endl;
+			std::cout << "   dir = " << dir.x << ", " << dir.y << std::endl;
+#endif
 
-			// transform direction
-			rot90(dir, ce->ccwSteps);
+			// ray transfer
+			if (ut > r)
+			{
+				// did not reach edge
+				pos.x = pos.x + r*dir.x;
+				pos.y = pos.y + r*dir.y;
+			}
+			else
+			{
+				// reached edge
+				pos.x = pos.x + ut*dir.x;
+				pos.y = pos.y + ut*dir.y;
 
-			// move to connecting node
-			node = ce->Node;
-			dest = node;
+				// decrement reach
+				r -= ut;
+
+				// check for connecting node
+				if (ce->Node != NULL)
+				{
+					// transform position
+					rot90(pos, ce->ccwSteps);
+
+					if ((ce->ccwSteps % 2) == 0)
+					{
+						pos.x *= sx;
+						pos.y *= sy;
+					}
+					else
+					{
+						pos.x *= sy;
+						pos.y *= sx;
+					}
+
+					// transform direction
+					rot90(dir, ce->ccwSteps);
+
+					// move to connecting node
+					node = ce->Node;
+				}
+				else
+				{
+					// halt if no connecting node
+					break;
+				}
+			}
+
+			// moved towards node boundary
+			;
 		}
 
-		// increment distance travelled
-		d += ut;
+		// next node
+		;
 	}
 
-	// cap the output
-	if (d > dMax)
-	{
-		dOut = dMax;
-		geom = NULL;
-	}
-	else
-	{
-		dOut = d;
-	}
+	// write result
+	out.node	= node;
+	out.geom	= ge;
+	out.pos		= pos;
+	out.dir		= dir;
+	out.d		= dMax - r;
 
-	npos = pos;
+	// done
+	;
 }
 
 /*
@@ -217,20 +275,17 @@ LevelNode* createDebugWorld()
 */
 void move_view(Vec2 const & v)
 {
-	float		vlen = std::sqrt(v.x*v.x + v.y*v.y);
-	Vec2		dir = Vec2(v.x / vlen, v.y / vlen);
-	LevelNode *	dest = NULL;
-	Geom *		geom = NULL;
-	Vec2		npos;
-	float		d;
+	float		len = std::sqrt(v.x*v.x + v.y*v.y);
+	Vec2		dir = Vec2(v.x / len, v.y / len);
+	traceres_t	tr;
 
-	std::cout << "vlen = " << vlen << std::endl;
-	trace(root, pos, dir, vlen, d, geom, dest, npos);
+	trace(root, pos, dir, len, tr);
 
-	root = dest;
+	root	= tr.node;
+	pos.x	= tr.pos.x;
+	pos.y	= tr.pos.y;
 
-	pos.x = npos.x;
-	pos.y = npos.y;
+	std::cout << "pos = " << tr.pos.x << ", " << tr.pos.y << std::endl;
 }
 
 /*
@@ -240,10 +295,7 @@ void game()
 {
 	float		step = (2.0f * 3.14f) / static_cast<float>(RAYSFRAME);
 	Vec2		dir;
-	Vec2		tmp;
-	float		d;
-	Geom *		geom = NULL;
-	LevelNode *	dest = NULL;
+	traceres_t	tr;
 
 	root = createDebugWorld();
 	pos.x = 0;
@@ -262,20 +314,19 @@ void game()
 		// handle input
 		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
-			std::cout << "ksbghfdbg" << std::endl;
-			move_view(Vec2(-0.1f, 0.0f));
+			move_view(Vec2(-0.01f, 0.0f));
 		}
 		else if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.5f, 0.0f));
+			move_view(Vec2(0.01f, 0.0f));
 		}
 		else if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.0f, 0.5f));
+			move_view(Vec2(0.0f, 0.01f));
 		}
 		else if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.0f, -0.5f));
+			move_view(Vec2(0.0f, -0.01f));
 		}
 
 		// prep
@@ -290,12 +341,12 @@ void game()
 			dir.x = cos(step * i);
 			dir.y = sin(step * i);
 
-			trace(root, pos, dir, 20.0f, d, geom, dest, tmp);
+			trace(root, pos, dir, 20.0f, tr);
 
 			glBegin(GL_LINES);
 			{
 				glVertex2f(0.0f, 0.0f);
-				glVertex2f(d*dir.x, d*dir.y);
+				glVertex2f(tr.d*dir.x, tr.d*dir.y);
 			}
 			glEnd();
 		}
