@@ -26,17 +26,24 @@ pixellight!
 */
 #define WINW		512
 #define WINH		512
-#define TEXW		256
-#define TEXH		256
+#define TEXW		512
+#define TEXH		512
 
 #define TX(x,y)		(texdata + (x) + (y)*TEXW)
 #define FF(n)		(n & 0xff)
 #define RGB(r,g,b)	(0xff000000 | (FF(b)<<16) | (FF(g)<<8) | (FF(r)))
-#define RANDRGB		(RGB(100+rand()%156,100+rand()%156,100+rand()%156))
+#define RANDRGB		(RGB(rand()%256,rand()%256,rand()%256))
+#define RANDRGB2(r,g,b,mod)	(RGB(max(0,min(r+rand()%mod),g+rand()%mod,b+rand()%mod))
 
 #define DT			0.01666667f
 #define PI			3.14159265f
-#define RAYSFRAME	500
+#define RAYSFRAME	3100
+#define RAYSFRAMEDEV	1500
+
+#define PARTICLESFRAME	1000
+#define PARTICLESFRAMEDEV	800
+
+
 #define TRACEDEBUG	0
 
 #define EDGE_S		0
@@ -47,6 +54,8 @@ pixellight!
 
 #define PXPLIMIT	65535
 
+int RaysPerFrame = RAYSFRAME;
+int ParticlesPerFrame = PARTICLESFRAME;
 /*
 	typedefs
 */
@@ -567,13 +576,18 @@ void move_view(Vec2 const & v)
 
 	trace(root, pos, dir, len, tr);
 
+	if (root != tr.node)
+	{
+		ccw = (ccw + tr.ccw) % 4;
+		std::cout << "changed room" << std::endl;
+	}
+
 	root	= tr.node;
 	pos.x	= tr.pos.x;
 	pos.y	= tr.pos.y;
-	ccw		= (ccw + tr.ccw) % 4;
 }
 
-void capFrameRate(double fps) {
+void capFramerate(double fps) {
     static double start = 0, diff, wait;
     wait = 1 / fps;
     diff = glfwGetTime() - start;
@@ -591,7 +605,8 @@ void game()
 {
 	float		frametime0;
 	float		scale = 0.3f;
-	float		theta = (2.0f * PI) / static_cast<float>(RAYSFRAME);
+	float		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
+	float		particleTheta = (2.0f * PI) / static_cast<float>(PARTICLESFRAME);
 	char		txt[100];
 	Vec2		mov;
 	Vec2		dir;
@@ -606,6 +621,11 @@ void game()
 	{
 		frame++;
 		frametime0 = static_cast<float>(glfwGetTime());
+
+		RaysPerFrame = RAYSFRAME+RAYSFRAMEDEV*sin(glfwGetTime()*5.0f);
+		ParticlesPerFrame = PARTICLESFRAME+PARTICLESFRAMEDEV*sin(PI+glfwGetTime()*5.0f);
+		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
+		particleTheta = (2.0f * PI) / static_cast<float>(ParticlesPerFrame);
 
 		// poll input
 		glfwPollEvents();
@@ -622,38 +642,22 @@ void game()
 
 		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
-			mov.x -= 0.01f;
+			mov.x -= 0.02f;
 		}
 		if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
-			mov.x += 0.01f;
+			mov.x += 0.02f;
 		}
 		if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			mov.y += 0.01f;
+			mov.y += 0.02f;
 		}
 		if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
-			mov.y -= 0.01f;
+			mov.y -= 0.02f;
 		}
 
-		
-
-		if(jumpVel.y>=0)
-		{
-			mov.y +=0.01f;
-			jumpVel.y -= 0.01f;
-			
-			
-		}
-		else
-		{
-			mov.y -=0.01f;
-		}
-		if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS && jumpVel.y<=0)
-		{
-			jumpVel.y = 1.0f;
-		}
+		rot90(mov, ccw);
 
 		if (mov.x != 0.0f || mov.y != 0.0f)
 		{
@@ -663,21 +667,22 @@ void game()
 		// prep
 		glClear(GL_COLOR_BUFFER_BIT);
 
+
 		// move particles
 		pxp_step(DT);
 
 		// emit particles
-		for (unsigned int i = 0; i < RAYSFRAME; i++)
+		for (unsigned int i = 0; i < ParticlesPerFrame; i++)
 		{
-			float a = theta*i + 0.6f*sin(15.0f*glfwGetTime());
+			float a = particleTheta*i + 0.6f*sin(15.0f*glfwGetTime());
 
 			dir.x = cos(a);
 			dir.y = sin(a);
 
 			trace(root, pos, dir, 15.0f, tr);
-			rot90(dir, ccw);
+			rot90(dir, 4-ccw);
 
-			float vel = 0.8f + 0.1f * (rand() % 50);
+			float vel = 0.9f + 0.3f * (rand() % 50);
 			float ttl = (60.0f/vel) * tr.d;
 
 			pxp_emit(ttl, vel*scale*dir.x, vel*scale*dir.y, 0.0f, 0.0f, RANDRGB);
@@ -713,18 +718,22 @@ void game()
 		}
 		glDisable(GL_TEXTURE_2D);
 
-		/*
+		
 		// draw some rays
-		for (unsigned int i = 0; i < RAYSFRAME; i++)
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+			
+			glLineWidth(25.0f);
+		for (unsigned int i = 0; i < RaysPerFrame; i++)
 		{
 			dir.x = cos(theta * i);
 			dir.y = sin(theta * i);
 
 			trace(root, pos, dir, 15.0f, tr);
 
-			rot90(dir, ccw);
+			rot90(dir, 4-ccw);
 
-			glColor3f(1.0f, 1.0f, 1.0f);
+			glColor4f(1.0f, 1.0f, 1.0f,0.005f);
 			glBegin(GL_LINES);
 			{
 				glVertex2f(0.0f, 0.0f);
@@ -732,9 +741,9 @@ void game()
 			}
 			glEnd();
 		}
-		*/
-
+		glDisable(GL_BLEND);
 		/*
+
 		// blend in some debug stuff
 		glPushMatrix();
 		{
@@ -746,9 +755,7 @@ void game()
 			glDisable(GL_BLEND);
 		}
 		glPopMatrix();
-		*/
 
-		/*
 		// draw an avatar
 		glColor3f(1.0f, 0.0f, 0.0f);
 		glPointSize(3.0f);
@@ -759,20 +766,18 @@ void game()
 		glEnd();
 		*/
 
-		
-		// wait a bit if not in sync
-		/*while (glfwGetTime() - frametime0 < DT - 0.00001f)
-		{
-			glfwSleep(0.0001f);// sleep 0.1ms
-		}*/
-
 		// swap
 		glfwSwapBuffers();
 
+		//// wait a bit if not in sync
+		//while (glfwGetTime() - frametime0 < DT - (1e-7))
+		//{
+		//	glfwSleep(0.0001f);// sleep 0.1ms
+		//}
 
 		// next frame
-		capFramerate(60);
-		;
+		capFramerate(60.0);
+		
 	}
 }
 
@@ -781,7 +786,6 @@ void editor()
 {
 	float		step = (2.0f * 3.14f) / static_cast<float>(RAYSFRAME);
 	Vec2		dir;
-	Vec2		jumpVel;
 	char		str[100];
 	traceres_t	tr;
 
@@ -808,20 +812,11 @@ void editor()
 		{
 			move_view(Vec2(0.02f, 0.0f));
 		}
-		else if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
-		{
-			move_view(Vec2(0.0f, -0.02f));
-		}
-		if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
-		{
-			jumpVel.y = 100.0f;
-		}
-		if(jumpVel.y>=0)
+		else if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
 		{
 			move_view(Vec2(0.0f, 0.02f));
-			jumpVel.y -= 0.02f;
 		}
-		else
+		else if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
 			move_view(Vec2(0.0f, -0.02f));
 		}

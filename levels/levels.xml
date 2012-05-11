@@ -7,6 +7,7 @@
         <edge start="2" end="1" side="2" ccw="0"/>
         <edge start="0" end="1" side="1" ccw="0"/>
         <edge start="2" end="10" side="0" ccw="1"/>
+        <edge start="10" end="0" side="1" ccw="3"/>
         
       </level>
 

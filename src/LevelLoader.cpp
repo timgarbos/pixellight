@@ -95,6 +95,10 @@ LevelNode* LevelLoader::LoadXml(int index)
 			LevelNode* newNode = new LevelNode();
 			
 			//Assuming we are getting them in order
+			newNode->colorR = node->ToElement()->IntAttribute("r");
+			newNode->colorG = node->ToElement()->IntAttribute("g");
+			newNode->colorB = node->ToElement()->IntAttribute("b");
+			
 			XMLNode * object;
 			if(node->FirstChild())
 			for(object = node->FirstChild()->FirstChild(); object; object = object->NextSibling() )
@@ -148,34 +152,105 @@ LevelNode* LevelLoader::LoadXml(int index)
 				levelNodes[start]->s->Node = levelNodes[end];
 				levelNodes[start]->s->ccwSteps = ccw;
 				if(ccw==0)
+				{
 					levelNodes[end]->n->Node = levelNodes[start];
+					levelNodes[end]->n->ccwSteps = nccw;
+				}
 				if(ccw==1)
+				{
 					levelNodes[end]->w->Node = levelNodes[start];
+					levelNodes[end]->w->ccwSteps = nccw;
+				}
 				
 				if(ccw==2)
+				{
 					levelNodes[end]->s->Node = levelNodes[start];
+					levelNodes[end]->s->ccwSteps = nccw;
+				}
 				if(ccw==3)
+				{
 					levelNodes[end]->e->Node = levelNodes[start];
+					levelNodes[end]->e->ccwSteps = nccw;
+				}
 
-				levelNodes[end]->n->ccwSteps = nccw;
 				break;
 			case 1:
 				levelNodes[start]->e->Node = levelNodes[end];
 				levelNodes[start]->e->ccwSteps = ccw;
-				levelNodes[end]->w->Node = levelNodes[start];
-				levelNodes[end]->w->ccwSteps = nccw;
+				if(ccw==0)
+				{
+					levelNodes[end]->w->Node = levelNodes[start];
+					levelNodes[end]->w->ccwSteps = nccw;
+				}
+				if(ccw==1)
+				{
+					levelNodes[end]->s->Node = levelNodes[start];
+					levelNodes[end]->s->ccwSteps = nccw;
+				}
+				
+				if(ccw==2)
+				{
+					levelNodes[end]->e->Node = levelNodes[start];
+					levelNodes[end]->e->ccwSteps = nccw;
+				}
+				if(ccw==3)
+				{
+					levelNodes[end]->n->Node = levelNodes[start];
+					levelNodes[end]->n->ccwSteps = nccw;
+				}
+
 				break;
 			case 2:
 				levelNodes[start]->n->Node = levelNodes[end];
 				levelNodes[start]->n->ccwSteps = ccw;
-				levelNodes[end]->s->Node = levelNodes[start];
-				levelNodes[end]->s->ccwSteps = nccw;
+				if(ccw==0)
+				{
+					levelNodes[end]->s->Node = levelNodes[start];
+					levelNodes[end]->s->ccwSteps = nccw;
+				}
+				if(ccw==1)
+				{
+					levelNodes[end]->e->Node = levelNodes[start];
+					levelNodes[end]->e->ccwSteps = nccw;
+				}
+				
+				if(ccw==2)
+				{
+					levelNodes[end]->n->Node = levelNodes[start];
+					levelNodes[end]->n->ccwSteps = nccw;
+				}
+				if(ccw==3)
+				{
+					levelNodes[end]->w->Node = levelNodes[start];
+					levelNodes[end]->w->ccwSteps = nccw;
+				}
+
 				break;
 			case 3:
 				levelNodes[start]->w->Node = levelNodes[end];
 				levelNodes[start]->w->ccwSteps = ccw;
-				levelNodes[end]->e->Node = levelNodes[start];
-				levelNodes[end]->e->ccwSteps = nccw;
+				if(ccw==0)
+				{
+					levelNodes[end]->e->Node = levelNodes[start];
+					levelNodes[end]->e->ccwSteps = nccw;
+				}
+				if(ccw==1)
+				{
+					levelNodes[end]->n->Node = levelNodes[start];
+					levelNodes[end]->n->ccwSteps = nccw;
+				}
+				
+				if(ccw==2)
+				{
+					levelNodes[end]->w->Node = levelNodes[start];
+					levelNodes[end]->w->ccwSteps = nccw;
+				}
+				if(ccw==3)
+				{
+					levelNodes[end]->s->Node = levelNodes[start];
+					levelNodes[end]->s->ccwSteps = nccw;
+				}
+
 				break;
 			}
 		}

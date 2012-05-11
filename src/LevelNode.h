@@ -25,6 +25,11 @@ public:
 	LevelEdge *n;
 	LevelEdge *s;
 	
+	int colorR;
+	int colorG;
+	int colorB;
+
+
 
 	list<GeomInstance*> objs;
 
