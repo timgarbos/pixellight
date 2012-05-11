@@ -386,10 +386,8 @@ void game()
 		glLoadIdentity();
 		glScalef(0.1f, 0.1f, 0.1f);
 
+	
 		glColor3f(1.0f, 1.0f, 1.0f);
-		root->Draw(pos);
-		glColor3f(1.0f, 1.0f, 1.0f);
-
 		// draw some rays
 		for (unsigned int i = 0; i < RAYSFRAME; i++)
 		{
@@ -405,6 +403,9 @@ void game()
 			}
 			glEnd();
 		}
+		
+		glColor4f(1.0f, 1.0f, 1.0f,0.3f);
+		root->Draw(pos);
 
 		// swap
 		glfwSwapBuffers();
