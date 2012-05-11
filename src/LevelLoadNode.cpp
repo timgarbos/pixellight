@@ -10,3 +10,4 @@ LevelLoadNode::LevelLoadNode(LevelNode* node)
 LevelLoadNode::~LevelLoadNode(void)
 {
 }
+

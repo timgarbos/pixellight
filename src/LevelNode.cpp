@@ -55,3 +55,18 @@ void LevelNode::CreateRandomWorld(int depth)
 
 
 }
+
+
+void LevelNode::Draw()
+{
+
+	//first let's draw the node
+	glBegin(GL_QUADS);
+	{
+		glVertex2f(0.0f, 0.0f);
+		glVertex2f(1.0,0.0f);
+		glVertex2f(1.0,1.0f);
+		glVertex2f(1.0,1.0f);
+	}
+	glEnd();
+}

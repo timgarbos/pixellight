@@ -349,7 +349,7 @@ void game()
 	Vec2		dir;
 	traceres_t	tr;
 
-	root = LevelLoader::LoadXml();
+	root = LevelLoader::LoadXml(0);
 	pos.x = 0;
 	pos.y = 0;
 
@@ -402,6 +402,77 @@ void game()
 			}
 			glEnd();
 		}
+
+		// swap
+		glfwSwapBuffers();
+
+		// next frame
+		;
+	}
+}
+
+
+void editor()
+{
+	float		step = (2.0f * 3.14f) / static_cast<float>(RAYSFRAME);
+	Vec2		dir;
+	traceres_t	tr;
+
+	root = LevelLoader::LoadXml(0);
+	pos.x = 0;
+	pos.y = 0;
+
+	while (true)
+	{
+		glfwPollEvents();
+
+		// quit on escape
+		if (glfwGetKey(GLFW_KEY_ESC) == GLFW_PRESS)
+		{
+			break;
+		}
+
+		// handle input
+		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
+		{
+			move_view(Vec2(-0.01f, 0.0f));
+		}
+		else if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
+		{
+			move_view(Vec2(0.01f, 0.0f));
+		}
+		else if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
+		{
+			move_view(Vec2(0.0f, 0.01f));
+		}
+		else if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
+		{
+			move_view(Vec2(0.0f, -0.01f));
+		}
+
+		// prep
+		glClear(GL_COLOR_BUFFER_BIT);
+		glLoadIdentity();
+		glScalef(0.1f, 0.1f, 0.1f);
+		glColor3f(1.0f, 1.0f, 1.0f);
+
+		root->Draw();
+
+		// draw some rays
+		/*for (unsigned int i = 0; i < RAYSFRAME; i++)
+		{
+			dir.x = cos(step * i);
+			dir.y = sin(step * i);
+
+			trace(root, pos, dir, 20.0f, tr);
+
+			glBegin(GL_LINES);
+			{
+				glVertex2f(0.0f, 0.0f);
+				glVertex2f(tr.d*dir.x, tr.d*dir.y);
+			}
+			glEnd();
+		}*/
 
 		// swap
 		glfwSwapBuffers();
