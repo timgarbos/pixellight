@@ -98,6 +98,9 @@ LevelNode* LevelLoader::LoadXml(int index)
 			newNode->colorR = node->ToElement()->IntAttribute("r");
 			newNode->colorG = node->ToElement()->IntAttribute("g");
 			newNode->colorB = node->ToElement()->IntAttribute("b");
+			newNode->colorMod = node->ToElement()->IntAttribute("m");
+			if(newNode->colorMod==0)
+				newNode->colorMod = 4;
 			
 			XMLNode * object;
 			if(node->FirstChild())

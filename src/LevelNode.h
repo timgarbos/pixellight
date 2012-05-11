@@ -28,6 +28,7 @@ public:
 	int colorR;
 	int colorG;
 	int colorB;
+	int colorMod;
 
 
 

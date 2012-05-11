@@ -33,7 +33,7 @@ pixellight!
 #define FF(n)		(n & 0xff)
 #define RGB(r,g,b)	(0xff000000 | (FF(b)<<16) | (FF(g)<<8) | (FF(r)))
 #define RANDRGB		(RGB(rand()%256,rand()%256,rand()%256))
-#define RANDRGB2(r,g,b,mod)	(RGB(max(0,min(r+rand()%mod),g+rand()%mod,b+rand()%mod))
+#define RANDRGB2(r,g,b,mod)	(RGB(max(0,min(255,r+rand()%mod)),max(0,min(255,g+rand()%mod)),max(0,min(255,b+rand()%mod))))
 
 #define DT			0.01666667f
 #define PI			3.14159265f
@@ -597,6 +597,7 @@ void capFramerate(double fps) {
     start = glfwGetTime();
 }
 
+
 Vec2	jumpVel;
 /*
 	game
@@ -685,7 +686,8 @@ void game()
 			float vel = 0.9f + 0.3f * (rand() % 50);
 			float ttl = (60.0f/vel) * tr.d;
 
-			pxp_emit(ttl, vel*scale*dir.x, vel*scale*dir.y, 0.0f, 0.0f, RANDRGB);
+			pxp_emit(ttl, vel*scale*dir.x, vel*scale*dir.y, 0.0f, 0.0f, i%root->colorMod==0?RANDRGB2(root->colorR,root->colorG,root->colorB,80):RANDRGB);
+			
 		}
 
 		// plot particles
