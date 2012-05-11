@@ -26,7 +26,8 @@ pixellight!
 #define WINW		512
 #define WINH		512
 
-#define RAYSFRAME	100
+#define PI			3.14159265f
+#define RAYSFRAME	10000
 #define TRACEDEBUG	0
 
 #define EDGE_S		0
@@ -45,6 +46,7 @@ Vec2		v11 = Vec2(1.0f, 1.0f);		// upper right
 
 LevelNode *	root;
 Vec2		pos;
+int			ccw;
 
 /*
 	rayline
@@ -106,6 +108,7 @@ typedef struct traceres
 	Vec2			pos;
 	Vec2			dir;
 	float			d;
+	int				ccw;
 } traceres_t;
 
 /*
@@ -125,6 +128,7 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 
 	int			ci	= EDGE_NONE;
 	int			co	= EDGE_NONE;
+	int			ccw = 0;
 
 #if TRACEDEBUG
 	std::cout << "--- new trace" << std::endl;
@@ -152,7 +156,7 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 	// loop until the maximum distance has been reached, or no more nodes
 	while (r > 0.0f && node != NULL)
 	{
-		float um;
+		float um = 0.0f;
 
 #if TRACEDEBUG
 		std::cout << "node " << node << std::endl;
@@ -164,12 +168,16 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 		}
 
 		// find nearest intersection with local geometry
-		/*for (std::list<GeomInstance *>::iterator it = node->objs.begin(); it != node->objs.end(); it++)
+		/*
+		for (std::list<GeomInstance *>::iterator it = node->objs.begin(); it != node->objs.end(); it++)
 		{
 			GeomInstance *	g		= *it;
 			Vec2 const &	gpos	= g->pos;
 			Geom *			gbase	= g->masterGeom;
 			Vec2 const &	gext	= gbase->extends;
+
+			//std::cout << "gpos = "<<gpos.x<<", " << gpos.y<< std::endl;
+			//std::cout << "gext = "<<gext.x<<", " << gext.y<< std::endl;
 
 			// we only care about region inside current node
 			float x0 = std::max(gpos.x-gext.x, -1.0f);
@@ -182,6 +190,8 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 			Vec2 g10(x1, y0);
 			Vec2 g01(x0, y1);
 			Vec2 g11(y1, y1);
+
+			std::cout << "geom ["<<x0<<","<<y0<<"] , ["<<x1<<","<<y1<<"]" << std::endl;
 
 			// test edges
 			if ((dir.y > 0.0f && rayline(pos, dir, g00, g10, ut, vt)) ||
@@ -335,6 +345,9 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 
 					// move to connecting node
 					node = ce->Node;
+
+					// accumulate ccw steps
+					ccw += ce->ccwSteps;
 				}
 				else
 				{
@@ -357,6 +370,7 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 	out.pos		= pos;
 	out.dir		= dir;
 	out.d		= dMax - r;
+	out.ccw		= ccw % 4;
 
 	// done
 	;
@@ -386,6 +400,7 @@ void move_view(Vec2 const & v)
 	root	= tr.node;
 	pos.x	= tr.pos.x;
 	pos.y	= tr.pos.y;
+	ccw		= (ccw + tr.ccw) % 4;
 }
 
 /*
@@ -393,13 +408,14 @@ void move_view(Vec2 const & v)
 */
 void game()
 {
-	float		step = (2.0f * 3.14f) / static_cast<float>(RAYSFRAME);
+	float		theta = (2.0f * PI) / static_cast<float>(RAYSFRAME);
 	Vec2		dir;
 	traceres_t	tr;
 
-	root = LevelLoader::LoadXml(0);
-	pos.x = 0;
-	pos.y = 0;
+	root	= LevelLoader::LoadXml(0);
+	pos.x	= 0.0f;
+	pos.y	= 0.0f;
+	ccw		= 0;
 
 	while (true)
 	{
@@ -438,10 +454,12 @@ void game()
 		// draw some rays
 		for (unsigned int i = 0; i < RAYSFRAME; i++)
 		{
-			dir.x = cos(step * i);
-			dir.y = sin(step * i);
+			dir.x = cos(theta * i);
+			dir.y = sin(theta * i);
 
-			trace(root, pos, dir, 20.0f, tr);
+			trace(root, pos, dir, 15.0f, tr);
+
+			rot90(dir, ccw);
 
 			glBegin(GL_LINES);
 			{
