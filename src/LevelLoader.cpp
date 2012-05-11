@@ -106,8 +106,8 @@ LevelNode* LevelLoader::LoadXml(int index)
 				newGeomInstance->pos.x = object->ToElement()->FloatAttribute("x");
 				newGeomInstance->pos.y = object->ToElement()->FloatAttribute("y");
 
-				newGeom->extends.x = object->ToElement()->FloatAttribute("extendsX");
-				newGeom->extends.y = object->ToElement()->FloatAttribute("extendsY");
+				newGeom->extends.x = object->ToElement()->FloatAttribute("extendsX")-1e-7;
+				newGeom->extends.y = object->ToElement()->FloatAttribute("extendsY")-1e-7;
 
 				newGeom->isStatic = object->ToElement()->BoolAttribute("type");
 
@@ -140,33 +140,42 @@ LevelNode* LevelLoader::LoadXml(int index)
 			printf("\n loading edge start: %i end: %i side: %i  ccw: %i",start,end,side,ccw);
 			if(end<0)
 				continue;
-			
 			//Set start edges
+			int nccw = (4-ccw)%4;;
 			switch(side)
 			{
 			case 0:
 				levelNodes[start]->s->Node = levelNodes[end];
 				levelNodes[start]->s->ccwSteps = ccw;
-				levelNodes[end]->n->Node = levelNodes[start];
-				levelNodes[end]->n->ccwSteps = (4-ccw)%4;
+				if(ccw==0)
+					levelNodes[end]->n->Node = levelNodes[start];
+				if(ccw==1)
+					levelNodes[end]->w->Node = levelNodes[start];
+				
+				if(ccw==2)
+					levelNodes[end]->s->Node = levelNodes[start];
+				if(ccw==3)
+					levelNodes[end]->e->Node = levelNodes[start];
+
+				levelNodes[end]->n->ccwSteps = nccw;
 				break;
 			case 1:
 				levelNodes[start]->e->Node = levelNodes[end];
 				levelNodes[start]->e->ccwSteps = ccw;
 				levelNodes[end]->w->Node = levelNodes[start];
-				levelNodes[end]->w->ccwSteps = (4-ccw)%4;
+				levelNodes[end]->w->ccwSteps = nccw;
 				break;
 			case 2:
 				levelNodes[start]->n->Node = levelNodes[end];
 				levelNodes[start]->n->ccwSteps = ccw;
 				levelNodes[end]->s->Node = levelNodes[start];
-				levelNodes[end]->s->ccwSteps = (4-ccw)%4;
+				levelNodes[end]->s->ccwSteps = nccw;
 				break;
 			case 3:
 				levelNodes[start]->w->Node = levelNodes[end];
 				levelNodes[start]->w->ccwSteps = ccw;
 				levelNodes[end]->e->Node = levelNodes[start];
-				levelNodes[end]->e->ccwSteps = (4-ccw)%4;
+				levelNodes[end]->e->ccwSteps = nccw;
 				break;
 			}
 		}
