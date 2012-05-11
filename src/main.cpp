@@ -573,6 +573,16 @@ void move_view(Vec2 const & v)
 	ccw		= (ccw + tr.ccw) % 4;
 }
 
+void capFrameRate(double fps) {
+    static double start = 0, diff, wait;
+    wait = 1 / fps;
+    diff = glfwGetTime() - start;
+    if (diff < wait) {
+        glfwSleep(wait - diff);
+    }
+    start = glfwGetTime();
+}
+
 Vec2	jumpVel;
 /*
 	game
@@ -761,6 +771,7 @@ void game()
 
 
 		// next frame
+		capFramerate(60);
 		;
 	}
 }
