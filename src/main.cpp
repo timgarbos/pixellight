@@ -32,7 +32,7 @@ pixellight!
 #define TX(x,y)		(texdata + (x) + (y)*TEXW)
 #define FF(n)		(n & 0xff)
 #define RGB(r,g,b)	(0xff000000 | (FF(b)<<16) | (FF(g)<<8) | (FF(r)))
-#define RANDRGB		(RGB(rand()%256,rand()%256,rand()%256))
+#define RANDRGB		(RGB(100+rand()%156,100+rand()%156,100+rand()%156))
 
 #define DT			0.01666667f
 #define PI			3.14159265f
