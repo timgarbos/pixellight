@@ -567,10 +567,15 @@ void move_view(Vec2 const & v)
 
 	trace(root, pos, dir, len, tr);
 
+	if (root != tr.node)
+	{
+		ccw = (ccw + tr.ccw) % 4;
+		std::cout << "changed room" << std::endl;
+	}
+
 	root	= tr.node;
 	pos.x	= tr.pos.x;
 	pos.y	= tr.pos.y;
-	ccw		= (ccw + tr.ccw) % 4;
 }
 
 /*
@@ -611,20 +616,22 @@ void game()
 
 		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
-			mov.x -= 0.01f;
+			mov.x -= 0.05f;
 		}
 		if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
-			mov.x += 0.01f;
+			mov.x += 0.05f;
 		}
 		if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			mov.y += 0.01f;
+			mov.y += 0.05f;
 		}
 		if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
-			mov.y -= 0.01f;
+			mov.y -= 0.05f;
 		}
+
+		rot90(mov, ccw);
 
 		if (mov.x != 0.0f || mov.y != 0.0f)
 		{
@@ -693,7 +700,7 @@ void game()
 
 			trace(root, pos, dir, 15.0f, tr);
 
-			rot90(dir, ccw);
+			rot90(dir, 4-ccw);
 
 			glColor3f(1.0f, 1.0f, 1.0f);
 			glBegin(GL_LINES);
@@ -703,9 +710,7 @@ void game()
 			}
 			glEnd();
 		}
-		*/
 
-		/*
 		// blend in some debug stuff
 		glPushMatrix();
 		{
@@ -717,9 +722,7 @@ void game()
 			glDisable(GL_BLEND);
 		}
 		glPopMatrix();
-		*/
 
-		/*
 		// draw an avatar
 		glColor3f(1.0f, 0.0f, 0.0f);
 		glPointSize(3.0f);
@@ -733,11 +736,11 @@ void game()
 		// swap
 		glfwSwapBuffers();
 
-		// wait a bit if not in sync
-		while (glfwGetTime() - frametime0 < DT - (1e-7))
-		{
-			glfwSleep(0.0001f);// sleep 0.1ms
-		}
+		//// wait a bit if not in sync
+		//while (glfwGetTime() - frametime0 < DT - (1e-7))
+		//{
+		//	glfwSleep(0.0001f);// sleep 0.1ms
+		//}
 
 		// next frame
 		;
