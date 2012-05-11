@@ -13,13 +13,13 @@
     <nodes>
       <node >
         <objects>
-          <object x="0" y="0" extendsX="2" extendsY="1" type="0"/>
+          <object x="0.0" y="0.0" extendsX="0.4" extendsY="0.4" type="1"/>
         </objects>
       </node>
 
       <node >
         <objects>
-          <object x="0" y="0" extendsX="2" extendsY="1" type="0"/>
+          <object x="0.0" y="0.0" extendsX="0.4" extendsY="0.4" type="1"/>
         </objects>
       </node>
 

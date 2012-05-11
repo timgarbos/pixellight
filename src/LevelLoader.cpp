@@ -46,11 +46,11 @@ LevelNode* LevelLoader::LoadXml()
 				GeomInstance* newGeomInstance = new GeomInstance(Vec2(0,0),newGeom);
 
 			
-				newGeomInstance->pos.x = object->ToElement()->IntAttribute("x");
-				newGeomInstance->pos.y = object->ToElement()->IntAttribute("y");
+				newGeomInstance->pos.x = object->ToElement()->FloatAttribute("x");
+				newGeomInstance->pos.y = object->ToElement()->FloatAttribute("y");
 
-				newGeom->extends.x = object->ToElement()->IntAttribute("extendsX");
-				newGeom->extends.y = object->ToElement()->IntAttribute("extendsY");
+				newGeom->extends.x = object->ToElement()->FloatAttribute("extendsX");
+				newGeom->extends.y = object->ToElement()->FloatAttribute("extendsY");
 
 				newGeom->isStatic = object->ToElement()->BoolAttribute("type");
 
