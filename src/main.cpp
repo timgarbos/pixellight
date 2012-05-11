@@ -27,7 +27,7 @@ pixellight!
 #define WINH		512
 
 #define PI			3.14159265f
-#define RAYSFRAME	10000
+#define RAYSFRAME	100
 #define TRACEDEBUG	0
 
 #define EDGE_S		0
