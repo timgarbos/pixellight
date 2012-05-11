@@ -62,7 +62,7 @@ void LevelNode::Draw(Vec2 pos)
 
 	//first let's draw the node
 	
-	glColor3f(0.2f, 0.2f, 0.2f);
+	glColor4f(0.2f, 0.2f, 0.2f, 0.7f);
 	glBegin(GL_QUADS);
 	{
 		glVertex2f(-pos.x-1.0f, -pos.y-1.0f);
@@ -79,9 +79,9 @@ void LevelNode::Draw(Vec2 pos)
 		GeomInstance* geom = *i;
 
 		if(geom->masterGeom->isStatic)
-			glColor3f(0.2f, 1.0f, 0.2f);
+			glColor4f(0.2f, 1.0f, 0.2f, 0.7f);
 		else
-			glColor3f(0.2f, 0.2f, 1.0f);
+			glColor4f(0.2f, 0.2f, 1.0f, 0.7f);
 
 		glBegin(GL_QUADS);
 		{

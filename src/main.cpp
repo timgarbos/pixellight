@@ -27,7 +27,7 @@ pixellight!
 #define WINH		512
 
 #define PI			3.14159265f
-#define RAYSFRAME	100
+#define RAYSFRAME	10000
 #define TRACEDEBUG	0
 
 #define EDGE_S		0
@@ -168,7 +168,6 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 		}
 
 		// find nearest intersection with local geometry
-		/*
 		for (std::list<GeomInstance *>::iterator it = node->objs.begin(); it != node->objs.end(); it++)
 		{
 			GeomInstance *	g		= *it;
@@ -176,8 +175,7 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 			Geom *			gbase	= g->masterGeom;
 			Vec2 const &	gext	= gbase->extends;
 
-			//std::cout << "gpos = "<<gpos.x<<", " << gpos.y<< std::endl;
-			//std::cout << "gext = "<<gext.x<<", " << gext.y<< std::endl;
+			//std::cout << "g pos = "<<gpos.x<<", " << gpos.y<< ", ext = "<<gext.x<<", " << gext.y<< std::endl;
 
 			// we only care about region inside current node
 			float x0 = std::max(gpos.x-gext.x, -1.0f);
@@ -189,14 +187,14 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 			Vec2 g00(x0, y0);
 			Vec2 g10(x1, y0);
 			Vec2 g01(x0, y1);
-			Vec2 g11(y1, y1);
+			Vec2 g11(x1, y1);
 
-			std::cout << "geom ["<<x0<<","<<y0<<"] , ["<<x1<<","<<y1<<"]" << std::endl;
+			//std::cout << "geom ["<<x0<<","<<y0<<"] , ["<<x1<<","<<y1<<"]" << std::endl;
 
-			// test edges
+			// test faces
 			if ((dir.y > 0.0f && rayline(pos, dir, g00, g10, ut, vt)) ||
 				(dir.x < 0.0f && rayline(pos, dir, g10, g11, ut, vt)) ||
-				(dir.y > 0.0f && rayline(pos, dir, g11, g01, ut, vt)) ||
+				(dir.y < 0.0f && rayline(pos, dir, g11, g01, ut, vt)) ||
 				(dir.x > 0.0f && rayline(pos, dir, g01, g00, ut, vt)))
 			{
 				if (ut <= r && (ge == NULL || ut < um))
@@ -206,7 +204,6 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 				}
 			}
 		}
-		*/
 
 		// if an intersection was found with local geometry, then move there
 		if (ge != NULL)
@@ -409,6 +406,7 @@ void move_view(Vec2 const & v)
 void game()
 {
 	float		theta = (2.0f * PI) / static_cast<float>(RAYSFRAME);
+	Vec2		mov;
 	Vec2		dir;
 	traceres_t	tr;
 
@@ -428,30 +426,37 @@ void game()
 		}
 
 		// handle input
+		mov.x = 0.0f;
+		mov.y = 0.0f;
+
 		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
-			move_view(Vec2(-0.1f, 0.0f));
+			mov.x -= 0.1f;
 		}
 		else if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.1f, 0.0f));
+			mov.x += 0.1f;
 		}
 		else if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.0f, 0.1f));
+			mov.y += 0.1f;
 		}
 		else if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.0f, -0.1f));
+			mov.y -= 0.1f;
+		}
+
+		if (mov.x != 0.0f || mov.y != 0.0f)
+		{
+			move_view(mov);
 		}
 
 		// prep
 		glClear(GL_COLOR_BUFFER_BIT);
 		glLoadIdentity();
-		glScalef(0.1f, 0.1f, 0.1f);
-
-	
+		glScalef(0.2f, 0.2f, 0.2f);
 		glColor3f(1.0f, 1.0f, 1.0f);
+
 		// draw some rays
 		for (unsigned int i = 0; i < RAYSFRAME; i++)
 		{
@@ -470,8 +475,10 @@ void game()
 			glEnd();
 		}
 		
-		glColor4f(1.0f, 1.0f, 1.0f,0.3f);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 		root->Draw(pos);
+		glDisable(GL_BLEND);
 
 		// swap
 		glfwSwapBuffers();
@@ -562,7 +569,7 @@ int main(int argc, char * argv[])
 	glfwSwapInterval(1);// vsync
 	glfwEnable(GLFW_STICKY_KEYS);
 	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
-	glfwOpenWindow(WINW, WINH, 8, 8, 8, 0, 0, 0, GLFW_WINDOW);
+	glfwOpenWindow(WINW, WINH, 8, 8, 8, 8, 0, 0, GLFW_WINDOW);
 	glfwSetWindowTitle("pixellight");
 
 	// loop
