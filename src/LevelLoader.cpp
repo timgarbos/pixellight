@@ -41,7 +41,7 @@ LevelNode* LevelLoader::LoadXml(int index)
 			
 			//Assuming we are getting them in order
 			XMLNode * object;
-			for(object = node->FirstChild(); object; object = object->NextSibling() )
+			for(object = node->FirstChild()->FirstChild(); object; object = object->NextSibling() )
 			{
 				Geom* newGeom = new Geom(true,Vec2(0,0));
 				GeomInstance* newGeomInstance = new GeomInstance(Vec2(0,0),newGeom);
@@ -78,6 +78,8 @@ LevelNode* LevelLoader::LoadXml(int index)
 			int side = edge->ToElement()->IntAttribute("side");
 			int ccw = edge->ToElement()->IntAttribute("ccw");
 
+			if(end<0)
+				continue;
 			printf("\n loading edge start: %i end: %i side: %i  ccw: %i",start,end,side,ccw);
 			//Set start edges
 			switch(side)
@@ -86,25 +88,25 @@ LevelNode* LevelLoader::LoadXml(int index)
 				levelNodes[start]->s->Node = levelNodes[end];
 				levelNodes[start]->s->ccwSteps = ccw;
 				levelNodes[end]->n->Node = levelNodes[start];
-				levelNodes[end]->n->ccwSteps = 4-ccw;
+				levelNodes[end]->n->ccwSteps = (4-ccw)%4;
 				break;
 			case 1:
 				levelNodes[start]->e->Node = levelNodes[end];
 				levelNodes[start]->e->ccwSteps = ccw;
 				levelNodes[end]->w->Node = levelNodes[start];
-				levelNodes[end]->w->ccwSteps = 4-ccw;
+				levelNodes[end]->w->ccwSteps = (4-ccw)%4;
 				break;
 			case 2:
 				levelNodes[start]->n->Node = levelNodes[end];
 				levelNodes[start]->n->ccwSteps = ccw;
 				levelNodes[end]->s->Node = levelNodes[start];
-				levelNodes[end]->s->ccwSteps = 4-ccw;
+				levelNodes[end]->s->ccwSteps = (4-ccw)%4;
 				break;
 			case 3:
 				levelNodes[start]->w->Node = levelNodes[end];
 				levelNodes[start]->w->ccwSteps = ccw;
 				levelNodes[end]->e->Node = levelNodes[start];
-				levelNodes[end]->e->ccwSteps = 4-ccw;
+				levelNodes[end]->e->ccwSteps = (4-ccw)%4;
 				break;
 			}
 		}

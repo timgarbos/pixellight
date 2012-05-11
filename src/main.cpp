@@ -449,6 +449,9 @@ void game()
 		glClear(GL_COLOR_BUFFER_BIT);
 		glLoadIdentity();
 		glScalef(0.1f, 0.1f, 0.1f);
+
+		glColor3f(1.0f, 1.0f, 1.0f);
+		root->Draw(pos);
 		glColor3f(1.0f, 1.0f, 1.0f);
 
 		// draw some rays
@@ -519,10 +522,10 @@ void editor()
 		// prep
 		glClear(GL_COLOR_BUFFER_BIT);
 		glLoadIdentity();
-		glScalef(0.1f, 0.1f, 0.1f);
+		glScalef(0.3f, 0.3f, 0.3f);
 		glColor3f(1.0f, 1.0f, 1.0f);
 
-		root->Draw();
+		root->Draw(pos);
 
 		// draw some rays
 		/*for (unsigned int i = 0; i < RAYSFRAME; i++)
@@ -563,6 +566,7 @@ int main(int argc, char * argv[])
 
 	// loop
 	game();
+	//editor();
 
 	// nuke
 	glfwCloseWindow();
