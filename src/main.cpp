@@ -18,6 +18,7 @@ pixellight!
 #include "LevelNode.h"
 #include "LevelEdge.h"
 #include "Geom.h"
+#include "LevelLoader.h"
 
 /*
 	MACROS
@@ -395,7 +396,7 @@ void game()
 	Vec2		dir;
 	traceres_t	tr;
 
-	root = createDebugWorld();
+	root = LevelLoader::LoadXml();
 	pos.x = 0;
 	pos.y = 0;
 
