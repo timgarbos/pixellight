@@ -573,6 +573,7 @@ void move_view(Vec2 const & v)
 	ccw		= (ccw + tr.ccw) % 4;
 }
 
+Vec2	jumpVel;
 /*
 	game
 */
@@ -624,6 +625,24 @@ void game()
 		if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
 			mov.y -= 0.01f;
+		}
+
+		
+
+		if(jumpVel.y>=0)
+		{
+			mov.y +=0.01f;
+			jumpVel.y -= 0.01f;
+			
+			
+		}
+		else
+		{
+			mov.y -=0.01f;
+		}
+		if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS && jumpVel.y<=0)
+		{
+			jumpVel.y = 1.0f;
 		}
 
 		if (mov.x != 0.0f || mov.y != 0.0f)
@@ -730,14 +749,16 @@ void game()
 		glEnd();
 		*/
 
+		
+		// wait a bit if not in sync
+		/*while (glfwGetTime() - frametime0 < DT - 0.00001f)
+		{
+			glfwSleep(0.0001f);// sleep 0.1ms
+		}*/
+
 		// swap
 		glfwSwapBuffers();
 
-		// wait a bit if not in sync
-		while (glfwGetTime() - frametime0 < DT - (1e-7))
-		{
-			glfwSleep(0.0001f);// sleep 0.1ms
-		}
 
 		// next frame
 		;
@@ -749,6 +770,7 @@ void editor()
 {
 	float		step = (2.0f * 3.14f) / static_cast<float>(RAYSFRAME);
 	Vec2		dir;
+	Vec2		jumpVel;
 	char		str[100];
 	traceres_t	tr;
 
@@ -775,11 +797,20 @@ void editor()
 		{
 			move_view(Vec2(0.02f, 0.0f));
 		}
-		else if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
+		else if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
+		{
+			move_view(Vec2(0.0f, -0.02f));
+		}
+		if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
+		{
+			jumpVel.y = 100.0f;
+		}
+		if(jumpVel.y>=0)
 		{
 			move_view(Vec2(0.0f, 0.02f));
+			jumpVel.y -= 0.02f;
 		}
-		else if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
+		else
 		{
 			move_view(Vec2(0.0f, -0.02f));
 		}
