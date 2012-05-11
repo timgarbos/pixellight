@@ -95,6 +95,8 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut
 	int c = 0;
 	LevelEdge *	ce = NULL;
 	Vec2		x;
+	Vec2		startPos = pos;
+	LevelNode* startNode = node;
 	float		sx;
 	float		sy;
 	float		ut;	// distance along trace direction
@@ -193,13 +195,17 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, float & dOut
 	{
 		dOut = dMax;
 		geom = NULL;
+		dest = startNode;
+		npos.y = startPos.y+dir.y;
+		npos.x = startPos.x+dir.x;
 	}
 	else
 	{
 		dOut = d;
 	}
 
-	npos = pos;
+	npos.x = pos.x;
+	npos.y = pos.y;
 }
 
 /*
@@ -263,7 +269,7 @@ void game()
 		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
 			std::cout << "ksbghfdbg" << std::endl;
-			move_view(Vec2(-0.1f, 0.0f));
+			move_view(Vec2(-0.05f, 0.0f));
 		}
 		else if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
