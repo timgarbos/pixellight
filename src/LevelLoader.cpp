@@ -31,24 +31,13 @@ LevelNode* LevelLoader::LoadXml()
 	{
 		printf("\n starting load level",0);
 		//To make relations easy we create a list of all the nodes, in order to later connect them
-		vector<LevelLoadNode*> levelNodes;
+		vector<LevelNode*> levelNodes;
 
 		XMLNode * node;
-		for(node = level->FirstChild(); node; node = node->NextSibling() )
+		for(node = level->FirstChild()->NextSibling()->FirstChild(); node; node = node->NextSibling() )
 		{
 			LevelNode* newNode = new LevelNode();
-			LevelLoadNode* newLevelNode = new LevelLoadNode(newNode);
 			
-			newLevelNode->e = node->ToElement()->IntAttribute("e");
-			newLevelNode->w = node->ToElement()->IntAttribute("w");
-			newLevelNode->n = node->ToElement()->IntAttribute("n");
-			newLevelNode->s = node->ToElement()->IntAttribute("s");
-
-			newNode->e->ccwSteps = node->ToElement()->IntAttribute("eccw");
-			newNode->w->ccwSteps = node->ToElement()->IntAttribute("eccw");
-			newNode->n->ccwSteps = node->ToElement()->IntAttribute("eccw");
-			newNode->s->ccwSteps = node->ToElement()->IntAttribute("eccw");
-
 			//Assuming we are getting them in order
 			XMLNode * object;
 			for(object = node->FirstChild(); object; object = object->NextSibling() )
@@ -71,22 +60,54 @@ LevelNode* LevelLoader::LoadXml()
 				printf("\n LOADED OBJECT \n",0);
 			}
 		
-			levelNodes.push_back(newLevelNode);
+			levelNodes.push_back(newNode);
 			printf("\n LOADED NODE \n",0);
 		}
 
-		rootNode = levelNodes[0]->node;
-		//Go through all levelnodes and make dependcies
-		for(int i=0;i<levelNodes.size();i++)
+		rootNode = levelNodes[0];
+		//Go through all edges
+		 
+		XMLNode * edge;
+		
+		for(edge = level->FirstChild()->FirstChild()->FirstChild(); edge; edge = edge->NextSibling() )
 		{
-			levelNodes[i]->node->e->Node = levelNodes[levelNodes[i]->e]->node;
-			//Only connecting in one direction for now.
-			//levelNodes[levelNodes[i]->e]->node->w->Node = levelNodes[i]->node;
+			
+			int start = edge->ToElement()->IntAttribute("start");
+			int end = edge->ToElement()->IntAttribute("end");
+			int side = edge->ToElement()->IntAttribute("side");
+			int ccw = edge->ToElement()->IntAttribute("ccw");
 
-			levelNodes[i]->node->w->Node = levelNodes[levelNodes[i]->w]->node;
-			levelNodes[i]->node->n->Node = levelNodes[levelNodes[i]->n]->node;
-			levelNodes[i]->node->s->Node = levelNodes[levelNodes[i]->s]->node;
+			printf("\n loading edge start: %i end: %i side: %i  ccw: %i",start,end,side,ccw);
+			//Set start edges
+			switch(side)
+			{
+			case 0:
+				levelNodes[start]->s->Node = levelNodes[end];
+				levelNodes[start]->s->ccwSteps = ccw;
+				levelNodes[end]->n->Node = levelNodes[start];
+				levelNodes[end]->n->ccwSteps = 4-ccw;
+				break;
+			case 1:
+				levelNodes[start]->e->Node = levelNodes[end];
+				levelNodes[start]->e->ccwSteps = ccw;
+				levelNodes[end]->w->Node = levelNodes[start];
+				levelNodes[end]->w->ccwSteps = 4-ccw;
+				break;
+			case 2:
+				levelNodes[start]->n->Node = levelNodes[end];
+				levelNodes[start]->n->ccwSteps = ccw;
+				levelNodes[end]->s->Node = levelNodes[start];
+				levelNodes[end]->s->ccwSteps = 4-ccw;
+				break;
+			case 3:
+				levelNodes[start]->w->Node = levelNodes[end];
+				levelNodes[start]->w->ccwSteps = ccw;
+				levelNodes[end]->e->Node = levelNodes[start];
+				levelNodes[end]->e->ccwSteps = 4-ccw;
+				break;
+			}
 		}
+		
 
 
 		printf("\n LOADED LEVEL \n",0);
