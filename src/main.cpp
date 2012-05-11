@@ -209,8 +209,8 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 		if (ge != NULL)
 		{
 			// ray transfer to intersection with geometry
-			pos.x += um*dir.x;
-			pos.y += um*dir.y;
+			pos.x += (um - static_cast<float>(1e-4))*dir.x;
+			pos.y += (um - static_cast<float>(1e-4))*dir.y;
 
 			// decrement reach
 			r -= um;
@@ -471,15 +471,15 @@ void game()
 			else
 				mov.x -= 0.1f;
 		}
-		else if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
+		if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
 			mov.x += 0.1f;
 		}
-		else if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
+		if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
 		{
 			mov.y += 0.1f;
 		}
-		else if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
+		if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
 			mov.y -= 0.1f;
 		}
