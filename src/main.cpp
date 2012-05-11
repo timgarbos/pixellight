@@ -19,15 +19,24 @@ pixellight!
 #include "LevelEdge.h"
 #include "Geom.h"
 #include "LevelLoader.h"
+#include "f3x5.h"
 
 /*
 	MACROS
 */
-#define WINW		512
-#define WINH		512
+#define WINW		768
+#define WINH		768
+#define TEXW		256
+#define TEXH		256
 
+#define TX(x,y)		(texdata + (x) + (y)*TEXW)
+#define FF(n)		(n & 0xff)
+#define RGB(r,g,b)	(0xff000000 | (FF(b)<<16) | (FF(g)<<8) | (FF(r)))
+#define RANDRGB		(RGB(rand()%256,rand()%256,rand()%256))
+
+#define DT			0.01666667f
 #define PI			3.14159265f
-#define RAYSFRAME	10000
+#define RAYSFRAME	500
 #define TRACEDEBUG	0
 
 #define EDGE_S		0
@@ -36,17 +45,119 @@ pixellight!
 #define EDGE_W		3
 #define EDGE_NONE	4
 
+#define PXPLIMIT	65535
+
+/*
+	typedefs
+*/
+typedef struct traceres
+{
+	LevelNode	*	node;
+	Geom *			geom;
+	Vec2			pos;
+	Vec2			dir;
+	float			d;
+	unsigned int	ccw;
+} traceres_t;
+
+typedef struct pxp
+{
+	unsigned int	ttl;
+	unsigned int	idx;
+	float			vx;
+	float			vy;
+	float			xx;
+	float			xy;
+	unsigned int	color;
+} pxp_t;
+
 /*
 	globals
 */
-Vec2		v00 = Vec2(-1.0f, -1.0f);	// lower left
-Vec2		v10 = Vec2(1.0f, -1.0f);	// lower right
-Vec2		v01 = Vec2(-1.0f, 1.0f);	// upper left
-Vec2		v11 = Vec2(1.0f, 1.0f);		// upper right
+unsigned int	frame;
+float			frametime;
 
-LevelNode *	root;
-Vec2		pos;
-int			ccw;
+Vec2			v00 = Vec2(-1.0f, -1.0f);	// lower left
+Vec2			v10 = Vec2(1.0f, -1.0f);	// lower right
+Vec2			v01 = Vec2(-1.0f, 1.0f);	// upper left
+Vec2			v11 = Vec2(1.0f, 1.0f);		// upper right
+
+LevelNode *		root;
+Vec2			pos;
+unsigned int	ccw;
+
+pxp_t *			pxpdata;
+unsigned int *	pxppool;
+unsigned int	pxppoolcursor;
+
+unsigned int *	texdata;
+unsigned int	texid;
+
+float			texv[] = { -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f };
+float			texc[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f };
+
+/*
+	dchr
+*/
+inline void dchr(unsigned int x0, unsigned int y0, unsigned char c, unsigned int color)
+{
+	unsigned short s = f3x5[f3x5t[c]];
+
+	for (unsigned char y = 0; y < 5; y++)
+	{
+		for (unsigned char x = 0; x < 3; x++)
+		{
+			if ((s & 1) != 0)
+			{
+				*TX(x0+2-x, TEXH-1-y0-y) = color;
+			}
+
+			s >>= 1;
+		}
+	}
+}
+
+/*
+	dstr
+*/
+void dstr(unsigned int x0, unsigned int y0, char const * s, unsigned int color)
+{
+	unsigned int	x = x0;
+	unsigned int	y = y0;
+	unsigned int	i = 0;
+	unsigned int	r;
+	unsigned char	c;
+
+	while (true)
+	{
+		if ((c = s[i++]) == '\0')
+		{
+			break;
+		}
+		else
+		{
+			switch (c)
+			{
+			case ' ':
+				x += 4;
+				break;
+
+			case '\n':
+				x = x0;
+				y += 6;
+				break;
+
+			case '\t':
+				x += ((r = (x-x0)%16) == 0) ? 16 : r;
+				break;
+
+			default:
+				dchr(x, y, c, color);
+				x += 4;
+			}
+		}
+	}
+}
 
 /*
 	rayline
@@ -97,19 +208,6 @@ inline void rot90(Vec2 & v, int ccwSteps)
 		break;
 	}
 }
-
-/*
-	traceres_t
-*/
-typedef struct traceres
-{
-	LevelNode	*	node;
-	Geom *			geom;
-	Vec2			pos;
-	Vec2			dir;
-	float			d;
-	int				ccw;
-} traceres_t;
 
 /*
 	trace
@@ -384,7 +482,82 @@ LevelNode* createDebugWorld()
 }
 
 /*
-	move
+	pxp_emit
+*/
+void pxp_emit(unsigned int ttl, float vx, float vy, float xx, float xy, unsigned int color)
+{
+	if (ttl != 0 && pxppoolcursor < PXPLIMIT)
+	{
+		pxp & p = pxpdata[pxppool[pxppoolcursor++]];
+
+		p.ttl	= ttl;
+		p.vx	= vx;
+		p.vy	= vy;
+		p.xx	= xx;
+		p.xy	= xy;
+		p.color	= color;
+	}
+}
+
+/*
+	pxp_step
+*/
+void pxp_step(float dt)
+{
+	//#pragma omp parallel for
+	for (int i = 0; i < PXPLIMIT; i++)
+	{
+		pxp & p = pxpdata[i];
+			
+		if (p.ttl != 0)
+		{
+			if ((--p.ttl) == 0)
+			{
+				pxppool[--pxppoolcursor] = p.idx;
+			}
+			else
+			{
+				p.xx += dt * p.vx;
+				p.xy += dt * p.vy;
+			}
+		}
+	}
+}
+
+/*
+	pxp_plot
+*/
+void pxp_plot()
+{
+	int		x;
+	int		y;
+
+	float	ex = static_cast<float>(TEXW>>1);
+	float	ey = static_cast<float>(TEXH>>1);
+
+	memset(texdata, 0, (TEXW*TEXH)<<2);
+
+	#pragma omp parallel for
+	for (int i = 0; i < PXPLIMIT; i++)
+	{
+		pxp const & p = pxpdata[i];
+		
+		if (p.ttl != 0)
+		{
+			x = static_cast<int>(p.xx * ex + ex);
+			y = static_cast<int>(p.xy * ey + ey);
+			
+			if (x >= 0 && x <= TEXW-1 &&
+				y >= 0 && y <= TEXH-1)
+			{
+				*TX(x,y) = p.color;
+			}
+		}
+	}
+}
+
+/*
+	move_view
 */
 void move_view(Vec2 const & v)
 {
@@ -405,7 +578,10 @@ void move_view(Vec2 const & v)
 */
 void game()
 {
+	float		frametime0;
+	float		scale = 0.3f;
 	float		theta = (2.0f * PI) / static_cast<float>(RAYSFRAME);
+	char		txt[100];
 	Vec2		mov;
 	Vec2		dir;
 	traceres_t	tr;
@@ -417,6 +593,10 @@ void game()
 
 	while (true)
 	{
+		frame++;
+		frametime0 = static_cast<float>(glfwGetTime());
+
+		// poll input
 		glfwPollEvents();
 
 		// quit on escape
@@ -431,19 +611,19 @@ void game()
 
 		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
-			mov.x -= 0.1f;
+			mov.x -= 0.01f;
 		}
 		if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
-			mov.x += 0.1f;
+			mov.x += 0.01f;
 		}
 		if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			mov.y += 0.1f;
+			mov.y += 0.01f;
 		}
 		if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
-			mov.y -= 0.1f;
+			mov.y -= 0.01f;
 		}
 
 		if (mov.x != 0.0f || mov.y != 0.0f)
@@ -453,10 +633,58 @@ void game()
 
 		// prep
 		glClear(GL_COLOR_BUFFER_BIT);
-		glLoadIdentity();
-		glScalef(0.2f, 0.2f, 0.2f);
-		glColor3f(1.0f, 1.0f, 1.0f);
 
+		// move particles
+		pxp_step(DT);
+
+		// emit particles
+		for (unsigned int i = 0; i < RAYSFRAME; i++)
+		{
+			float a = theta*i + 0.6f*sin(15.0f*glfwGetTime());
+
+			dir.x = cos(a);
+			dir.y = sin(a);
+
+			trace(root, pos, dir, 15.0f, tr);
+			rot90(dir, ccw);
+
+			float vel = 0.8f + 0.1f * (rand() % 50);
+			float ttl = (60.0f/vel) * tr.d;
+
+			pxp_emit(ttl, vel*scale*dir.x, vel*scale*dir.y, 0.0f, 0.0f, RANDRGB);
+		}
+
+		// plot particles
+		pxp_plot();
+
+		// read frametime
+		frametime = static_cast<float>(glfwGetTime()) - frametime0;
+
+		// plot some text
+		sprintf(txt, "frame %d\nf/sec %d\n#free %d\n#live %d", frame, static_cast<unsigned int>(1.0f / frametime),
+			PXPLIMIT-pxppoolcursor, pxppoolcursor);
+		
+		dstr(10, 10, txt, RGB(255,255,255));
+
+		// draw plot
+		glEnable(GL_TEXTURE_2D);
+		{
+			glBindTexture(GL_TEXTURE_2D, texid);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, TEXW, TEXH, GL_RGBA, GL_UNSIGNED_BYTE, texdata);
+
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glVertexPointer(2, GL_FLOAT, 0, texv);
+			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+			glTexCoordPointer(2, GL_FLOAT, 0, texc);
+
+			glDrawArrays(GL_QUADS, 0, 4);
+
+			glDisableClientState(GL_VERTEX_ARRAY);
+			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		}
+		glDisable(GL_TEXTURE_2D);
+
+		/*
 		// draw some rays
 		for (unsigned int i = 0; i < RAYSFRAME; i++)
 		{
@@ -467,18 +695,40 @@ void game()
 
 			rot90(dir, ccw);
 
+			glColor3f(1.0f, 1.0f, 1.0f);
 			glBegin(GL_LINES);
 			{
 				glVertex2f(0.0f, 0.0f);
-				glVertex2f(tr.d*dir.x, tr.d*dir.y);
+				glVertex2f(scale*tr.d*dir.x, scale*tr.d*dir.y);
 			}
 			glEnd();
 		}
-		
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		root->Draw(pos);
-		glDisable(GL_BLEND);
+		*/
+
+		/*
+		// blend in some debug stuff
+		glPushMatrix();
+		{
+			glScalef(scale, scale, 1.0f);
+
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+			root->Draw(pos);
+			glDisable(GL_BLEND);
+		}
+		glPopMatrix();
+		*/
+
+		/*
+		// draw an avatar
+		glColor3f(1.0f, 0.0f, 0.0f);
+		glPointSize(3.0f);
+		glBegin(GL_POINTS);
+		{
+			glVertex2f(0.0f, 0.0f);
+		}
+		glEnd();
+		*/
 
 		// swap
 		glfwSwapBuffers();
@@ -493,6 +743,7 @@ void editor()
 {
 	float		step = (2.0f * 3.14f) / static_cast<float>(RAYSFRAME);
 	Vec2		dir;
+	char		str[100];
 	traceres_t	tr;
 
 	root = LevelLoader::LoadXml(0);
@@ -512,19 +763,19 @@ void editor()
 		// handle input
 		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
-			move_view(Vec2(-0.01f, 0.0f));
+			move_view(Vec2(-0.02f, 0.0f));
 		}
 		else if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.01f, 0.0f));
+			move_view(Vec2(0.02f, 0.0f));
 		}
 		else if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.0f, 0.01f));
+			move_view(Vec2(0.0f, 0.02f));
 		}
 		else if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.0f, -0.01f));
+			move_view(Vec2(0.0f, -0.02f));
 		}
 
 		// prep
@@ -564,19 +815,45 @@ void editor()
 */
 int main(int argc, char * argv[])
 {
-	// init
+	// init glfw
 	glfwInit();
 	glfwSwapInterval(1);// vsync
 	glfwEnable(GLFW_STICKY_KEYS);
 	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
-	glfwOpenWindow(WINW, WINH, 8, 8, 8, 8, 0, 0, GLFW_WINDOW);
+	glfwOpenWindow(WINW, WINH, 8, 8, 8, 0, 0, 0, GLFW_WINDOW);
 	glfwSetWindowTitle("pixellight");
+
+	// init buffers
+	glGenTextures(1, &texid);
+	glBindTexture(GL_TEXTURE_2D, texid);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXW, TEXH, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	texdata	= new unsigned int[TEXW*TEXH];
+	pxpdata	= new pxp_t[PXPLIMIT];
+	pxppool	= new unsigned int[PXPLIMIT];
+
+	#pragma omp parallel for
+	for (int i = 0; i < PXPLIMIT; i++)
+	{
+		pxpdata[i].ttl	= 0;
+		pxpdata[i].idx	= i;
+		pxppool[i]		= i;
+	}
+
+	pxppoolcursor = 0;
 
 	// loop
 	game();
 	//editor();
 
-	// nuke
+	// nuke buffers
+	delete[] texdata;
+	delete[] pxpdata;
+	delete[] pxppool;
+
+	// nuke glfw
 	glfwCloseWindow();
 
 	// done
