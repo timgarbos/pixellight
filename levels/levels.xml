@@ -13,25 +13,25 @@
     <nodes>
       <node >
         <objects>
-          <object x="0.0" y="0.0" extendsX="0.4" extendsY="0.4" type="1"/>
+          <object x="0.0f" y="0.0f" extendsX="0.1f" extendsY="0.1f" type="1"/>
         </objects>
       </node>
 
       <node >
         <objects>
-          <object x="0.0" y="0.0" extendsX="0.4" extendsY="0.4" type="1"/>
+          <object x="0.0f" y="0.0f" extendsX="0.4f" extendsY="0.4f" type="0"/>
         </objects>
       </node>
 
       <node >
         <objects>
-          <object x="0" y="0" extendsX="2" extendsY="1" type="0"/>
+          
         </objects>
       </node>
 
       <node >
         <objects>
-          <object x="0" y="0" extendsX="2" extendsY="1" type="0"/>
+          
         </objects>
       </node>
     </nodes>

@@ -41,7 +41,7 @@ LevelNode* LevelLoader::LoadXml(int index)
 			
 			//Assuming we are getting them in order
 			XMLNode * object;
-			for(object = node->FirstChild(); object; object = object->NextSibling() )
+			for(object = node->FirstChild()->FirstChild(); object; object = object->NextSibling() )
 			{
 				Geom* newGeom = new Geom(true,Vec2(0,0));
 				GeomInstance* newGeomInstance = new GeomInstance(Vec2(0,0),newGeom);
