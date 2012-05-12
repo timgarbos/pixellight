@@ -1146,7 +1146,7 @@ int main(int argc, char * argv[])
 	glfwEnable(GLFW_STICKY_KEYS);
 	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
 	glfwOpenWindow(WINW, WINH, 8, 8, 8, 0, 0, 0, GLFW_WINDOW);
-	glfwSetWindowTitle("Photon Boy");
+	glfwSetWindowTitle("photonboy 1e-7");
     
     audioManager = new AudioManager();
     
