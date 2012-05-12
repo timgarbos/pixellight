@@ -106,18 +106,21 @@ LevelNode* LevelLoader::LoadXml(int index)
 			if(node->FirstChild())
 			for(object = node->FirstChild()->FirstChild(); object; object = object->NextSibling() )
 			{
-				Geom* newGeom = new Geom(true,Vec2(0,0));
+				Geom* newGeom = new Geom(true,false,Vec2(0,0),0,0,0);
 				GeomInstance* newGeomInstance = new GeomInstance(Vec2(0,0),newGeom);
 
-			
 				newGeomInstance->pos.x = object->ToElement()->FloatAttribute("x");
 				newGeomInstance->pos.y = object->ToElement()->FloatAttribute("y");
 
-				newGeom->extends.x = object->ToElement()->FloatAttribute("extendsX")-1e-7;
-				newGeom->extends.y = object->ToElement()->FloatAttribute("extendsY")-1e-7;
+				newGeom->colorR = object->ToElement()->IntAttribute("colorR");
+				newGeom->colorG = object->ToElement()->IntAttribute("colorG");
+				newGeom->colorB = object->ToElement()->IntAttribute("colorB");
+
+				newGeom->extends.x = object->ToElement()->FloatAttribute("extendsX")-(1e-7);
+				newGeom->extends.y = object->ToElement()->FloatAttribute("extendsY")-(1e-7);
 
 				newGeom->isStatic = object->ToElement()->BoolAttribute("type");
-
+				newGeom->isGoal = object->ToElement()->BoolAttribute("goal");
 
 				newNode->objs.push_back(newGeomInstance);
 

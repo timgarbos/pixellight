@@ -824,7 +824,7 @@ void capFramerate(double fps) {
 void game()
 {
 	float		frametime0;
-	float		scale = 0.1f;
+	float		scale = 0.2f;
 	float		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
 	float		particleTheta = (2.0f * PI) / static_cast<float>(PARTICLESFRAME);
 	char		txt[100];
@@ -916,37 +916,13 @@ void game()
 			float spd = 0.9f + 0.15f * (rand() % 100);
 			float ttl = 1 + (60.0f/spd) * tr.d;
 
-			pxp_emit(static_cast<unsigned int>(ttl), spd*scale*dir.x, spd*scale*dir.y, 0.0f, 0.0f, i%root->colorMod==0?RANDRGB2(root->colorR,root->colorG,root->colorB,80):RANDRGB);
+			pxp_emit(static_cast<unsigned int>(ttl), spd*0.3f*dir.x, spd*0.3f*dir.y, 0.0f, 0.0f, i%root->colorMod==0?RANDRGB2(root->colorR,root->colorG,root->colorB,80):RANDRGB);
 
-			if (tr.geom != NULL && tr.geom->extends.x < 0.5f/* need proper goal flag */)
+			if (tr.geom != NULL && tr.geom->isGoal)
 			{
-				float nx;
-				float ny;
+				pxp_emit(60, spd*0.3f*dir.x, spd*0.3f*dir.y, scale*dir.x*tr.d, scale*dir.y*tr.d, RGB(tr.geom->colorR,tr.geom->colorG,tr.geom->colorB));
 
-				tr.norm = ((4 + (tr.norm-1) - (ccw + tr.ccw)%4) % 4) + 1;
-
-				switch (tr.norm)
-				{
-				case NORM_E:
-					nx = 1.0f;
-					ny = 0.0f;
-					break;
-				case NORM_W:
-					nx = -1.0f;
-					ny = 0.0f;
-					break;
-				case NORM_N:
-					nx = 0.0f;
-					ny = 1.0f;
-					break;
-				case NORM_S:
-					nx = 0.0f;
-					ny = -1.0f;
-					break;
-				}
-
-				pxp_emit(10, -0.1f*nx, -0.1f*ny, scale*dir.x*tr.d, scale*dir.y*tr.d, RGB(255,0,0));
-				/*
+				/* gravity goals doesn't look good, scrapped
 				std::map<Geom *, Vec2>::iterator it = goals.find(tr.geom);
 
 				if (it == goals.end())
