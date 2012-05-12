@@ -702,7 +702,7 @@ void move_player()
 	else
 	{
 		// apply some gravity
-		acc.y -= 10.0f;
+		acc.y -= 7.0f;
 	}
 
 	// velocity intergration step
@@ -1034,6 +1034,10 @@ void game()
 		
 		dstr(10, 10, txt, RGB(255,255,255));
 
+		// enable additive blending
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
 		// draw plot
 		glEnable(GL_TEXTURE_2D);
 		{
@@ -1055,8 +1059,6 @@ void game()
 		// draw some rays
 		if (wait == 0)
 		{
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 			glColor4f(1.0f, 1.0f, 1.0f, 0.005f);
 			glLineWidth(25.0f);
 
@@ -1076,11 +1078,13 @@ void game()
 				}
 				glEnd();
 			}
-
-			glDisable(GL_BLEND);
 		}
 
-		// swap, gogo!
+		// disable additive blending
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+		// swap, gogogo!
 		glfwSwapBuffers();
 		
 		// next frame
