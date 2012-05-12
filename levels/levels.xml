@@ -87,7 +87,7 @@
     </node>
 
 
-    <node  r="50" g="50" b="200" m="1">
+    <node  r="50" g="50" b="200" m="1" audio="1">
       <objects>
         <object x="0.5f" y="0.5f" extendsX="0.2f" extendsY="0.2f" type="1"/>
       </objects>

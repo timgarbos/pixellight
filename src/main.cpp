@@ -12,7 +12,6 @@ pixellight!
 // GL
 #include <GL/glfw.h>
 
-
 // local
 #include "Vec2.h"
 #include "LevelNode.h"
@@ -653,9 +652,20 @@ void move_player()
 	// did we change root?
 	if (root != tr.node)
 	{
-		// in that case, space may have rotated
+        
+        // in that case, space may have rotated
 		ccw = (ccw + tr.ccw) % 4;
-	}
+ 
+        cout << "audio: " << tr.node->audio << endl;
+        
+        // fade out
+        if(root->audio < audioManager->channels.size())
+            audioManager->channels[root->audio]->setVolumeTarget(0.0f, 0.5f);
+
+        // fade in
+        if(tr.node->audio < audioManager->channels.size())
+            audioManager->channels[tr.node->audio]->setVolumeTarget(1.0f, 0.5f);
+ 	}
 
 	// update stuff
 	root	= tr.node;
@@ -741,7 +751,7 @@ void game()
     float frame_time_last = glfwGetTime();
     float frame_time;
     float delta_time;
-    
+
 	while (true)
 	{
         // calc delta time.
@@ -754,7 +764,7 @@ void game()
 		frame++;
 		frametime0 = static_cast<float>(glfwGetTime());
 
-		RaysPerFrame = RAYSFRAME+RAYSFRAMEDEV*sin(glfwGetTime()*5.0f);
+        RaysPerFrame = RAYSFRAME+RAYSFRAMEDEV*sin(glfwGetTime()*5.0f);
 		ParticlesPerFrame = PARTICLESFRAME+PARTICLESFRAMEDEV*sin(PI+glfwGetTime()*5.0f);
 		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
 		particleTheta = (2.0f * PI) / static_cast<float>(ParticlesPerFrame);

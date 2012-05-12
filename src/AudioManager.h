@@ -3,8 +3,11 @@
 #include <iostream>
 #include <vector>
 
+#include <GL/glfw.h>
+
 #include <fmod.hpp>
 #include "fmod_errors.h"
+
 #include "fmod_utils.h"
 #include "AudioChannel.h"
 

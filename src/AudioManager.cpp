@@ -1,6 +1,7 @@
 #include "AudioManager.h"
 
 #include "utils.h"
+#include <cmath>
 
 using namespace std;
 
@@ -42,20 +43,18 @@ void AudioManager::initialize_background_ambience()
 {
     background_ambience = new AudioChannel(system, "audio/white-noise.wav");
     background_ambience->playSound();
-    background_ambience->setVolumeTarget(1.0f, 0.1f);
-    
-    channels.push_back(background_ambience);
-    
 }
 
 void AudioManager::initialize_channels()
 {
     channels.push_back(new AudioChannel(system, "audio/C.wav"));
-    channels.push_back(new AudioChannel(system, "audio/D.wav"));
     channels.push_back(new AudioChannel(system, "audio/Fmaj_C.wav"));
-    channels.push_back(new AudioChannel(system, "audio/G.wav"));
     channels.push_back(new AudioChannel(system, "audio/Am.wav"));
+    channels.push_back(new AudioChannel(system, "audio/D.wav"));
+    channels.push_back(new AudioChannel(system, "audio/G.wav"));
 }
+
+const float BACKGROUND_AMBIENCE_FLOOR = 0.2f;
 
 void AudioManager::update_channels(float deltaTime)
 {
@@ -63,6 +62,11 @@ void AudioManager::update_channels(float deltaTime)
     {
         (*it)->update(deltaTime);
     }
+    
+    float pulse = sin(glfwGetTime()*5.0f + 0.15f);
+    pulse = pulse > 0.0f ? pulse : 0.0f;
+    
+    background_ambience->setVolume((pulse * (1.0f - BACKGROUND_AMBIENCE_FLOOR) + BACKGROUND_AMBIENCE_FLOOR) * 0.1f) ;
 }
 
 AudioManager::~AudioManager()
