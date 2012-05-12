@@ -4,6 +4,8 @@ pixellight!
 
 */
 
+#include <cmath>
+
 // libc++
 #include <iostream>
 #include <map>
@@ -11,15 +13,13 @@ pixellight!
 // GL
 #include <GL/glfw.h>
 
-// fmod
-#include <fmod.hpp>
-
 // local
 #include "Vec2.h"
 #include "LevelNode.h"
 #include "LevelEdge.h"
 #include "Geom.h"
 #include "LevelLoader.h"
+#include "AudioManager.h"
 #include "f3x5.h"
 
 /*
@@ -33,8 +33,11 @@ pixellight!
 #define TX(x,y)		(texdata + (x) + (y)*TEXW)
 #define FF(n)		(n & 0xff)
 #define RGB(r,g,b)	(0xff000000 | (FF(b)<<16) | (FF(g)<<8) | (FF(r)))
-#define RANDRGB		(RGB(rand()%256,rand()%256,rand()%256))
-#define RANDRGB2(r,g,b,mod)	(RGB(max(0,min(255,r+rand()%mod)),max(0,min(255,g+rand()%mod)),max(0,min(255,b+rand()%mod))))
+#define RGBA(r,g,b,a)	((FF(a)<<24) | (FF(b)<<16) | (FF(g)<<8) | (FF(r)))
+#define RANDRGB_		(RGB(rand()%256,rand()%256,rand()%256))
+#define RANDRGB		(RGBA(rand()%256,rand()%256,rand()%256,120))
+#define RANDRGB2_(r,g,b,mod)	(RGB(max(0,min(255,r+rand()%mod)),max(0,min(255,g+rand()%mod)),max(0,min(255,b+rand()%mod))))
+#define RANDRGB2(r,g,b,mod)	(RGBA(max(0,min(255,r+rand()%mod)),max(0,min(255,g+rand()%mod)),max(0,min(255,b+rand()%mod)),120))
 
 #define DT			0.01666667f
 #define PI			3.14159265f
@@ -42,8 +45,8 @@ pixellight!
 #define RAYSFRAME			3100
 #define RAYSFRAMEDEV		1500
 
-#define PARTICLESFRAME		1000
-#define PARTICLESFRAMEDEV	800
+#define PARTICLESFRAME		1200
+#define PARTICLESFRAMEDEV	1200
 
 #define TRACEDEBUG	0
 
@@ -181,6 +184,8 @@ void dstr(unsigned int x0, unsigned int y0, char const * s, unsigned int color)
 		}
 	}
 }
+
+AudioManager *audioManager;
 
 /*
 	rayline
@@ -628,8 +633,13 @@ void pxp_plot()
 	memset(texdata, 0, (TEXW*TEXH)<<2);
 
 	//#pragma omp parallel for
+	int pixelSize = 1;
+
 	for (int i = 0; i < PXPLIMIT; i++)
 	{
+		//pixelSize = i%120==0?2:1;
+		//pixelSize = i%401==0?4:pixelSize;
+
 		pxp const & p = pxpdata[i];
 		
 		if (p.ttl != 0)
@@ -637,14 +647,22 @@ void pxp_plot()
 			x = static_cast<int>(p.xx * ex + ex);
 			y = static_cast<int>(p.xy * ey + ey);
 			
-			if (x >= 0 && x <= TEXW-1 &&
-				y >= 0 && y <= TEXH-1)
-			{
-				*TX(x,y) = p.color;
+				for(int ix=x-pixelSize/2;ix<x+pixelSize;ix++)
+				{
+					for(int iy=y-pixelSize/2;iy<y+pixelSize;iy++)
+					{
+						if (ix >= 0 && ix <= TEXW-1 &&
+								iy >= 0 && iy <= TEXH-1)
+						{
+							*TX(ix,iy) = p.color;
+						}
+					}
+				}
+
 			}
 		}
 	}
-}
+
 
 /*
 	move_player
@@ -748,9 +766,20 @@ void move_player()
 	// did we change root?
 	if (root != tr.node)
 	{
-		// in that case, space may have rotated
+        
+        // in that case, space may have rotated
 		ccw = (ccw + tr.ccw) % 4;
-	}
+ 
+        cout << "audio: " << tr.node->audio << endl;
+        
+        // fade out
+        if(root->audio < audioManager->channels.size())
+            audioManager->channels[root->audio]->setVolumeTarget(0.0f, 0.5f);
+
+        // fade in
+        if(tr.node->audio < audioManager->channels.size())
+            audioManager->channels[tr.node->audio]->setVolumeTarget(1.0f, 0.5f);
+ 	}
 
 	// if player was obstructed, then respond to the contact
 	if (tr.norm != 0)
@@ -837,12 +866,23 @@ void game()
 	pos.y	= 0.0f;
 	ccw		= 0;
 
+    float frame_time_last = glfwGetTime();
+    float frame_time;
+    float delta_time;
+
 	while (true)
 	{
+        // calc delta time.
+        frame_time = glfwGetTime();
+        delta_time = frame_time - frame_time_last;
+        frame_time_last = frame_time;
+        
+        audioManager->update_channels(delta_time);
+        
 		frame++;
 		frametime0 = static_cast<float>(glfwGetTime());
 
-		RaysPerFrame = RAYSFRAME+RAYSFRAMEDEV*sin(glfwGetTime()*5.0f);
+        RaysPerFrame = RAYSFRAME+RAYSFRAMEDEV*sin(glfwGetTime()*5.0f);
 		ParticlesPerFrame = PARTICLESFRAME+PARTICLESFRAMEDEV*sin(PI+glfwGetTime()*5.0f);
 		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
 		particleTheta = (2.0f * PI) / static_cast<float>(ParticlesPerFrame);
@@ -891,6 +931,30 @@ void game()
 			move_view(mov);
 		}
 		*/
+		if (glfwGetKey('1') == GLFW_PRESS)
+		{
+			root = LevelLoader::LoadXml(0);
+			pos.x = 0;
+			pos.y = 0;
+		}
+		if (glfwGetKey('2') == GLFW_PRESS)
+		{
+			root = LevelLoader::LoadXml(1);
+			pos.x = 0;
+			pos.y = 0;
+		}
+		if (glfwGetKey('3') == GLFW_PRESS)
+		{
+			root = LevelLoader::LoadXml(2);
+			pos.x = 0;
+			pos.y = 0;
+		}
+		if (glfwGetKey('4') == GLFW_PRESS)
+		{
+			root = LevelLoader::LoadXml(3);
+			pos.x = 0;
+			pos.y = 0;
+		}
 
 		// mooo
 		if (glfwGetKey(GLFW_KEY_BACKSPACE) == GLFW_PRESS)
@@ -905,12 +969,12 @@ void game()
 		// emit particles
 		for (unsigned int i = 0; i < ParticlesPerFrame; i++)
 		{
-			float a = particleTheta*i + 0.6f*sin(15.0f*glfwGetTime());
+			float a = particleTheta*i + 0.6f*sin(10.0f*glfwGetTime());
 
 			dir.x = cos(a);
 			dir.y = sin(a);
 
-			trace(root, pos, dir, 15.0f, tr);
+			trace(root, pos, dir, 10.0f, tr);
 			rot90(dir, 4-ccw);
 
 			float spd = 0.9f + 0.15f * (rand() % 100);
@@ -949,6 +1013,8 @@ void game()
 		
 		dstr(10, 10, txt, RGB(255,255,255));
 
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 		// draw plot
 		glEnable(GL_TEXTURE_2D);
 		{
@@ -970,8 +1036,7 @@ void game()
 		// draw some rays
 		glColor4f(1.0f, 1.0f, 1.0f, 0.005f);
 		glLineWidth(25.0f);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
 
 		for (unsigned int i = 0; i < RaysPerFrame; i++)
 		{
@@ -994,7 +1059,7 @@ void game()
 
 		// swap
 		glfwSwapBuffers();
-
+		
 		// next frame
 		capFramerate(60.0);
 	}
@@ -1081,8 +1146,10 @@ int main(int argc, char * argv[])
 	glfwEnable(GLFW_STICKY_KEYS);
 	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
 	glfwOpenWindow(WINW, WINH, 8, 8, 8, 0, 0, 0, GLFW_WINDOW);
-	glfwSetWindowTitle("pixellight");
-
+	glfwSetWindowTitle("Photon Boy");
+    
+    audioManager = new AudioManager();
+    
 	// init buffers
 	glGenTextures(1, &texid);
 	glBindTexture(GL_TEXTURE_2D, texid);
@@ -1108,6 +1175,10 @@ int main(int argc, char * argv[])
 	game();
 	//editor();
 
+    delete audioManager;
+    
+	// nuke
+
 	// nuke buffers
 	delete[] texdata;
 	delete[] pxpdata;
@@ -1115,7 +1186,7 @@ int main(int argc, char * argv[])
 
 	// nuke glfw
 	glfwCloseWindow();
-
+    
 	// done
 	return 0;
 }
