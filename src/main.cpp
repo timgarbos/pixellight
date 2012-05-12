@@ -20,15 +20,31 @@ pixellight!
 #include "Geom.h"
 #include "LevelLoader.h"
 #include "AudioManager.h"
+#include "f3x5.h"
 
 /*
 	MACROS
 */
 #define WINW		512
 #define WINH		512
+#define TEXW		512
+#define TEXH		512
 
+#define TX(x,y)		(texdata + (x) + (y)*TEXW)
+#define FF(n)		(n & 0xff)
+#define RGB(r,g,b)	(0xff000000 | (FF(b)<<16) | (FF(g)<<8) | (FF(r)))
+#define RANDRGB		(RGB(rand()%256,rand()%256,rand()%256))
+#define RANDRGB2(r,g,b,mod)	(RGB(max(0,min(255,r+rand()%mod)),max(0,min(255,g+rand()%mod)),max(0,min(255,b+rand()%mod))))
+
+#define DT			0.01666667f
 #define PI			3.14159265f
-#define RAYSFRAME	10000
+
+#define RAYSFRAME			3100
+#define RAYSFRAMEDEV		1500
+
+#define PARTICLESFRAME		1000
+#define PARTICLESFRAMEDEV	800
+
 #define TRACEDEBUG	0
 
 #define EDGE_S		0
@@ -37,17 +53,131 @@ pixellight!
 #define EDGE_W		3
 #define EDGE_NONE	4
 
+#define NORM_N		1
+#define NORM_W		2
+#define NORM_S		3
+#define NORM_E		4
+
+#define PXPLIMIT	65535
+
+int RaysPerFrame = RAYSFRAME;
+int ParticlesPerFrame = PARTICLESFRAME;
+/*
+	typedefs
+*/
+typedef struct traceres
+{
+	LevelNode	*	node;
+	Geom *			geom;
+	Vec2			pos;
+	Vec2			dir;
+	float			d;
+	unsigned int	ccw;
+	int				norm;
+} traceres_t;
+
+typedef struct pxp
+{
+	unsigned int	ttl;
+	unsigned int	idx;
+	float			vx;
+	float			vy;
+	float			xx;
+	float			xy;
+	unsigned int	color;
+} pxp_t;
+
 /*
 	globals
 */
-Vec2		v00 = Vec2(-1.0f, -1.0f);	// lower left
-Vec2		v10 = Vec2(1.0f, -1.0f);	// lower right
-Vec2		v01 = Vec2(-1.0f, 1.0f);	// upper left
-Vec2		v11 = Vec2(1.0f, 1.0f);		// upper right
+unsigned int	frame;
+float			frametime;
+bool			particles = false;
 
-LevelNode *	root;
-Vec2		pos;
-int			ccw;
+Vec2			v00 = Vec2(-1.0f, -1.0f);	// lower left
+Vec2			v10 = Vec2(1.0f, -1.0f);	// lower right
+Vec2			v01 = Vec2(-1.0f, 1.0f);	// upper left
+Vec2			v11 = Vec2(1.0f, 1.0f);		// upper right
+
+LevelNode *		root;
+Vec2			pos;
+Vec2			vel;
+unsigned int	ccw;
+
+pxp_t *			pxpdata;
+unsigned int *	pxppool;
+unsigned int	pxppoolcursor;
+
+unsigned int *	texdata;
+unsigned int	texid;
+
+float			texv[] = { -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f };
+float			texc[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f };
+
+bool			ground = false;
+
+/*
+	dchr
+*/
+inline void dchr(unsigned int x0, unsigned int y0, unsigned char c, unsigned int color)
+{
+	unsigned short s = f3x5[f3x5t[c]];
+
+	for (unsigned char y = 0; y < 5; y++)
+	{
+		for (unsigned char x = 0; x < 3; x++)
+		{
+			if ((s & 1) != 0)
+			{
+				*TX(x0+2-x, TEXH-1-y0-y) = color;
+			}
+
+			s >>= 1;
+		}
+	}
+}
+
+/*
+	dstr
+*/
+void dstr(unsigned int x0, unsigned int y0, char const * s, unsigned int color)
+{
+	unsigned int	x = x0;
+	unsigned int	y = y0;
+	unsigned int	i = 0;
+	unsigned int	r;
+	unsigned char	c;
+
+	while (true)
+	{
+		if ((c = s[i++]) == '\0')
+		{
+			break;
+		}
+		else
+		{
+			switch (c)
+			{
+			case ' ':
+				x += 4;
+				break;
+
+			case '\n':
+				x = x0;
+				y += 6;
+				break;
+
+			case '\t':
+				x += ((r = (x-x0)%16) == 0) ? 16 : r;
+				break;
+
+			default:
+				dchr(x, y, c, color);
+				x += 4;
+			}
+		}
+	}
+}
 
 AudioManager *audioManager;
 
@@ -102,23 +232,12 @@ inline void rot90(Vec2 & v, int ccwSteps)
 }
 
 /*
-	traceres_t
-*/
-typedef struct traceres
-{
-	LevelNode	*	node;
-	Geom *			geom;
-	Vec2			pos;
-	Vec2			dir;
-	float			d;
-	int				ccw;
-} traceres_t;
-
-/*
 	trace
 */
 inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t & out)
 {
+	int			tn	= 0;
+	int			hn	= 0;
 	Geom *		ge	= NULL;
 	LevelEdge *	ce	= NULL;
 	float		r	= dMax;
@@ -195,14 +314,15 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 			//std::cout << "geom ["<<x0<<","<<y0<<"] , ["<<x1<<","<<y1<<"]" << std::endl;
 
 			// test faces
-			if ((dir.y > 0.0f && rayline(pos, dir, g00, g10, ut, vt)) ||
-				(dir.x < 0.0f && rayline(pos, dir, g10, g11, ut, vt)) ||
-				(dir.y < 0.0f && rayline(pos, dir, g11, g01, ut, vt)) ||
-				(dir.x > 0.0f && rayline(pos, dir, g01, g00, ut, vt)))
+			if ((dir.y > 0.0f && rayline(pos, dir, g00, g10, ut, vt) && (tn = NORM_S) != 0) ||
+				(dir.x < 0.0f && rayline(pos, dir, g10, g11, ut, vt) && (tn = NORM_E) != 0) ||
+				(dir.y < 0.0f && rayline(pos, dir, g11, g01, ut, vt) && (tn = NORM_N) != 0) ||
+				(dir.x > 0.0f && rayline(pos, dir, g01, g00, ut, vt) && (tn = NORM_W) != 0))
 			{
 				if (ut <= r && (ge == NULL || ut < um))
 				{
 					ge = gbase;
+					hn = tn;
 					um = ut;
 				}
 			}
@@ -212,8 +332,8 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 		if (ge != NULL)
 		{
 			// ray transfer to intersection with geometry
-			pos.x += um*dir.x;
-			pos.y += um*dir.y;
+			pos.x += (um - static_cast<float>(1e-4))*dir.x;
+			pos.y += (um - static_cast<float>(1e-4))*dir.y;
 
 			// decrement reach
 			r -= um;
@@ -303,6 +423,12 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 				// decrement reach
 				r -= ut;
 
+				// hack hack, norm norm
+				if (ce->Node == NULL)
+				{
+					hn = co + 1;
+				}
+
 				// check for connecting node
 				if (ce->Node != NULL)
 				{
@@ -367,6 +493,7 @@ inline void trace(LevelNode * node, Vec2 pos, Vec2 dir, float dMax, traceres_t &
 	// write result
 	out.node	= node;
 	out.geom	= ge;
+	out.norm	= hn;
 	out.pos		= pos;
 	out.dir		= dir;
 	out.d		= dMax - r;
@@ -387,7 +514,182 @@ LevelNode* createDebugWorld()
 }
 
 /*
-	move
+	pxp_emit
+*/
+void pxp_emit(unsigned int ttl, float vx, float vy, float xx, float xy, unsigned int color)
+{
+	if (ttl != 0 && pxppoolcursor < PXPLIMIT)
+	{
+		pxp & p = pxpdata[pxppool[pxppoolcursor++]];
+
+		p.ttl	= ttl;
+		p.vx	= vx;
+		p.vy	= vy;
+		p.xx	= xx;
+		p.xy	= xy;
+		p.color	= color;
+	}
+}
+
+/*
+	pxp_step
+*/
+void pxp_step(float dt)
+{
+	//#pragma omp parallel for
+	for (int i = 0; i < PXPLIMIT; i++)
+	{
+		pxp & p = pxpdata[i];
+			
+		if (p.ttl != 0)
+		{
+			if ((--p.ttl) == 0)
+			{
+				pxppool[--pxppoolcursor] = p.idx;
+			}
+			else
+			{
+				p.xx += dt * p.vx;
+				p.xy += dt * p.vy;
+			}
+		}
+	}
+}
+
+/*
+	pxp_plot
+*/
+void pxp_plot()
+{
+	int x;
+	int y;
+
+	float ex = static_cast<float>(TEXW>>1);
+	float ey = static_cast<float>(TEXH>>1);
+
+	memset(texdata, 0, (TEXW*TEXH)<<2);
+
+	//#pragma omp parallel for
+	for (int i = 0; i < PXPLIMIT; i++)
+	{
+		pxp const & p = pxpdata[i];
+		
+		if (p.ttl != 0)
+		{
+			x = static_cast<int>(p.xx * ex + ex);
+			y = static_cast<int>(p.xy * ey + ey);
+			
+			if (x >= 0 && x <= TEXW-1 &&
+				y >= 0 && y <= TEXH-1)
+			{
+				*TX(x,y) = p.color;
+			}
+		}
+	}
+}
+
+/*
+	move_player
+*/
+void move_player()
+{
+	Vec2		acc;
+	float		len;
+	Vec2		dir;
+	float		dd;
+	traceres_t	tr;
+
+	// apply left/right acceleration
+	if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
+	{
+		acc.x -= ground ? 30.0f : 15.0f;
+	}
+	if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		acc.x += ground ? 30.0f : 15.0f;
+	}
+
+	// if on ground
+	if (ground)
+	{
+		// apply jump impulse
+		if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
+		{
+			acc.y += (6.0f / DT);
+		}
+	}
+	else
+	{
+		// apply some gravity in the air
+		acc.y -= 10.0f;
+	}
+
+	// transform acceleration into current space
+	rot90(acc, ccw);
+
+	// velocity intergration step
+	vel.x += DT * acc.x;
+	vel.y += DT * acc.y;
+
+	// apply some damping
+	if (ccw % 2 == 0)
+	{
+		vel.x *= 0.9f;
+	}
+	else
+	{
+		vel.y *= 0.9f;
+	}
+
+	// trace prepare!
+	len		= std::sqrt(vel.x*vel.x + vel.y*vel.y);
+	dir.x	= vel.x/len;
+	dir.y	= vel.y/len;
+	dd		= DT * len;
+
+	// trace execute!
+	trace(root, pos, dir, dd, tr);
+
+	// did we change root?
+	if (root != tr.node)
+	{
+		// in that case, space may have rotated
+		ccw = (ccw + tr.ccw) % 4;
+	}
+
+	// update stuff
+	root	= tr.node;
+	pos.x	= tr.pos.x;
+	pos.y	= tr.pos.y;
+
+	// transform velocity
+	rot90(vel, tr.ccw);
+
+	// clamp velocity
+	switch (tr.norm)
+	{
+	case NORM_N:
+	case NORM_S:
+		vel.y = 0.0f;
+		vel.x *= (dd - tr.d) / dd;
+		break;
+
+	case NORM_W:
+	case NORM_E:
+		vel.x = 0.0f;
+		vel.y *= (dd - tr.d) / dd;
+		break;
+	}
+
+	// update ground flag
+	ground = (((4+(tr.norm-1)-ccw)%4) + 1 == NORM_N);
+
+	// done?
+	;
+}
+
+/*
+	move_view
 */
 void move_view(Vec2 const & v)
 {
@@ -397,10 +699,24 @@ void move_view(Vec2 const & v)
 
 	trace(root, pos, dir, len, tr);
 
+	if (root != tr.node)
+	{
+		ccw = (ccw + tr.ccw) % 4;
+	}
+
 	root	= tr.node;
 	pos.x	= tr.pos.x;
 	pos.y	= tr.pos.y;
-	ccw		= (ccw + tr.ccw) % 4;
+}
+
+void capFramerate(double fps) {
+    static double start = 0, diff, wait;
+    wait = 1 / fps;
+    diff = glfwGetTime() - start;
+    if (diff < wait) {
+        glfwSleep(wait - diff);
+    }
+    start = glfwGetTime();
 }
 
 /*
@@ -408,7 +724,11 @@ void move_view(Vec2 const & v)
 */
 void game()
 {
-	float		theta = (2.0f * PI) / static_cast<float>(RAYSFRAME);
+	float		frametime0;
+	float		scale = 0.3f;
+	float		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
+	float		particleTheta = (2.0f * PI) / static_cast<float>(PARTICLESFRAME);
+	char		txt[100];
 	Vec2		mov;
 	Vec2		dir;
 	traceres_t	tr;
@@ -431,6 +751,15 @@ void game()
         
         audioManager->update_channels(delta_time);
         
+		frame++;
+		frametime0 = static_cast<float>(glfwGetTime());
+
+		RaysPerFrame = RAYSFRAME+RAYSFRAMEDEV*sin(glfwGetTime()*5.0f);
+		ParticlesPerFrame = PARTICLESFRAME+PARTICLESFRAMEDEV*sin(PI+glfwGetTime()*5.0f);
+		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
+		particleTheta = (2.0f * PI) / static_cast<float>(ParticlesPerFrame);
+
+		// poll input
 		glfwPollEvents();
 
 		// quit on escape
@@ -439,69 +768,131 @@ void game()
 			break;
 		}
 
+		// move the player
+		move_player();
+
+		/*
 		// handle input
 		mov.x = 0.0f;
 		mov.y = 0.0f;
 
 		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
-			mov.x -= 0.1f;
+			mov.x -= 0.02f;
 		}
-		else if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
+		if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
-			mov.x += 0.1f;
+			mov.x += 0.02f;
 		}
-		else if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
+		if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			mov.y += 0.1f;
+			mov.y += 0.02f;
 		}
-		else if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
+		if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
-			mov.y -= 0.1f;
+			mov.y -= 0.02f;
 		}
+
+		rot90(mov, ccw);
 
 		if (mov.x != 0.0f || mov.y != 0.0f)
 		{
 			move_view(mov);
 		}
+		*/
+
+		// mooo
+		if (glfwGetKey(GLFW_KEY_BACKSPACE) == GLFW_PRESS)
+		{
+			particles = !particles;
+		}
 
 		// prep
 		glClear(GL_COLOR_BUFFER_BIT);
-		glLoadIdentity();
-		glScalef(0.2f, 0.2f, 0.2f);
 		glColor3f(1.0f, 1.0f, 1.0f);
 
+		// move particles
+		pxp_step(DT);
+
+		// emit particles
+		for (unsigned int i = 0; i < ParticlesPerFrame; i++)
+		{
+			float a = particleTheta*i + 0.6f*sin(15.0f*glfwGetTime());
+
+			dir.x = cos(a);
+			dir.y = sin(a);
+
+			trace(root, pos, dir, 15.0f, tr);
+			rot90(dir, 4-ccw);
+
+			float spd = 0.9f + 0.3f * (rand() % 50);
+			float ttl = (60.0f/spd) * tr.d;
+
+			pxp_emit(static_cast<unsigned int>(ttl), spd*scale*dir.x, spd*scale*dir.y, 0.0f, 0.0f, i%root->colorMod==0?RANDRGB2(root->colorR,root->colorG,root->colorB,80):RANDRGB);
+		}
+
+		// plot particles
+		pxp_plot();
+
+		// read frametime
+		frametime = static_cast<float>(glfwGetTime()) - frametime0;
+
+		// plot some text
+		sprintf(txt, "frame %d\nf/sec %d\n#free %d\n#live %d", frame, static_cast<unsigned int>(1.0f / frametime),
+			PXPLIMIT-pxppoolcursor, pxppoolcursor);
+		
+		dstr(10, 10, txt, RGB(255,255,255));
+
+		// draw plot
+		glEnable(GL_TEXTURE_2D);
+		{
+			glBindTexture(GL_TEXTURE_2D, texid);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, TEXW, TEXH, GL_RGBA, GL_UNSIGNED_BYTE, texdata);
+
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glVertexPointer(2, GL_FLOAT, 0, texv);
+			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+			glTexCoordPointer(2, GL_FLOAT, 0, texc);
+
+			glDrawArrays(GL_QUADS, 0, 4);
+
+			glDisableClientState(GL_VERTEX_ARRAY);
+			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		}
+		glDisable(GL_TEXTURE_2D);
+		
 		// draw some rays
-		for (unsigned int i = 0; i < RAYSFRAME; i++)
+		glColor4f(1.0f, 1.0f, 1.0f, 0.005f);
+		glLineWidth(25.0f);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+		for (unsigned int i = 0; i < RaysPerFrame; i++)
 		{
 			dir.x = cos(theta * i);
 			dir.y = sin(theta * i);
 
 			trace(root, pos, dir, 15.0f, tr);
 
-			rot90(dir, ccw);
+			rot90(dir, 4-ccw);
 
 			glBegin(GL_LINES);
 			{
 				glVertex2f(0.0f, 0.0f);
-				glVertex2f(tr.d*dir.x, tr.d*dir.y);
+				glVertex2f(scale*tr.d*dir.x, scale*tr.d*dir.y);
 			}
 			glEnd();
 		}
-		
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		root->Draw(pos);
+
 		glDisable(GL_BLEND);
 
 		// swap
 		glfwSwapBuffers();
 
 		// next frame
-		;
+		capFramerate(60.0);
 	}
 }
-
 
 void editor()
 {
@@ -526,19 +917,19 @@ void editor()
 		// handle input
 		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
 		{
-			move_view(Vec2(-0.01f, 0.0f));
+			move_view(Vec2(-0.02f, 0.0f));
 		}
 		else if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.01f, 0.0f));
+			move_view(Vec2(0.02f, 0.0f));
 		}
 		else if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.0f, 0.01f));
+			move_view(Vec2(0.0f, 0.02f));
 		}
 		else if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
-			move_view(Vec2(0.0f, -0.01f));
+			move_view(Vec2(0.0f, -0.02f));
 		}
 
 		// prep
@@ -578,16 +969,37 @@ void editor()
 */
 int main(int argc, char * argv[])
 {
-	// init
+	// init glfw
 	glfwInit();
 	glfwSwapInterval(1);// vsync
 	glfwEnable(GLFW_STICKY_KEYS);
 	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
-	glfwOpenWindow(WINW, WINH, 8, 8, 8, 8, 0, 0, GLFW_WINDOW);
+	glfwOpenWindow(WINW, WINH, 8, 8, 8, 0, 0, 0, GLFW_WINDOW);
 	glfwSetWindowTitle("pixellight");
     
     audioManager = new AudioManager();
     
+	// init buffers
+	glGenTextures(1, &texid);
+	glBindTexture(GL_TEXTURE_2D, texid);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXW, TEXH, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+	texdata	= new unsigned int[TEXW*TEXH];
+	pxpdata	= new pxp_t[PXPLIMIT];
+	pxppool	= new unsigned int[PXPLIMIT];
+
+	//#pragma omp parallel for
+	for (int i = 0; i < PXPLIMIT; i++)
+	{
+		pxpdata[i].ttl	= 0;
+		pxpdata[i].idx	= i;
+		pxppool[i]		= i;
+	}
+
+	pxppoolcursor = 0;
+
 	// loop
 	game();
 	//editor();
@@ -595,6 +1007,13 @@ int main(int argc, char * argv[])
     delete audioManager;
     
 	// nuke
+
+	// nuke buffers
+	delete[] texdata;
+	delete[] pxpdata;
+	delete[] pxppool;
+
+	// nuke glfw
 	glfwCloseWindow();
     
 	// done
