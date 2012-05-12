@@ -63,7 +63,7 @@ pixellight!
 
 #define PXPLIMIT	65535
 
-#define NUMLEVELS	4
+#define NUMLEVELS	5
 
 int RaysPerFrame = RAYSFRAME;
 int ParticlesPerFrame = PARTICLESFRAME;
@@ -104,6 +104,7 @@ Vec2			v01 = Vec2(-1.0f, 1.0f);	// upper left
 Vec2			v11 = Vec2(1.0f, 1.0f);		// upper right
 
 LevelNode *		root;
+LevelNode *		root0;
 Vec2			pos;
 Vec2			vel;
 unsigned int	ccw;
@@ -670,7 +671,7 @@ void pxp_plot()
 			*/
 
 			if (x >= 0 && x <= TEXW-1 &&
-				x >= 0 && y <= TEXH-1)
+				y >= 0 && y <= TEXH-1)
 			{
 				*TX(x,y) = p.color;
 			}
@@ -711,8 +712,11 @@ void move_player()
 	}
 	else
 	{
-		// apply some gravity
-		acc.y -= 7.0f;
+		// apply some gravity if not moving too fast already
+		if (vel.y > -30.0f)
+		{
+			acc.y -= 7.0f;
+		}
 	}
 
 	// velocity intergration step
@@ -780,7 +784,6 @@ void move_player()
 	// did we change root?
 	if (root != tr.node)
 	{
-        
         // in that case, space may have rotated
 		ccw = (ccw + tr.ccw) % 4;
  
@@ -970,6 +973,12 @@ void game()
 			wait	= 1;
 			waitbeg	= wait;
 		}
+		if (glfwGetKey('5') == GLFW_PRESS)
+		{
+			lvlnext = 4;
+			wait	= 1;
+			waitbeg	= wait;
+		}
 
 		// prep draw
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -983,11 +992,13 @@ void game()
 				if (lvlnext != lvlcurr)
 				{
 					root	= LevelLoader::LoadXml(lvlnext);
+					root0	= root;
 					lvlcurr	= lvlnext;
 				}
 
-				pos.x	= 0;
-				pos.y	= 0;
+				root	= root0;
+				pos.x	= 0.0f;
+				pos.y	= 0.0f;
 				normpre	= 0;
 				wooo	= false;
 				died	= false;
@@ -1035,7 +1046,7 @@ void game()
 				}
 			}
 		}
-		else if ((died || wooo) && wait >= (waitbeg>>1))
+		else if ((wooo || died) && wait >= (waitbeg>>1))
 		{
 			char const * msgwin	= "yaay";
 			char const * msgbad	= "awww";
@@ -1056,17 +1067,17 @@ void game()
 					{
 						if ((s & 1) != 0)
 						{
-							for (int k = 0; k < 4; k++)
+							for (int k = 0; k < 7; k++)
 							{
 								float xf = x0 - x*ps - 0.01f*(rand()%100)*ps;
 								float yf = y0 - y*ps - 0.01f*(rand()%100)*ps;
 
-								float vx = 1.0f*scale*xf + 0.0001f*(rand()%100) - 0.0002f;
-								float vy = 1.0f*scale*yf + 0.0001f*(rand()%100) - 0.0002f;
+								float vx = 2.0f*scale*xf + 0.0001f*(rand()%100) - 0.0002f;
+								float vy = 2.0f*scale*yf + 0.0001f*(rand()%100) - 0.0002f;
 
 								unsigned int rn = 100+rand()%156;
 
-								pxp_emit(waitbeg>>2, vx, vy, xf, yf, died ? RGB(rn,0,0) : RGB(0,rn,0));
+								pxp_emit(waitbeg>>1, vx, vy, xf, yf, died ? RGB(rn,0,0) : RGB(0,rn,0));
 							}
 						}
 
@@ -1088,7 +1099,7 @@ void game()
 		frametime = static_cast<float>(glfwGetTime()) - frametime0;
 
 		// plot some text
-		sprintf(txt, "photon boy\n----------\nframe %d\nf/sec %d\n#free %d\n#live %d\nlvl## %d",
+		sprintf(txt, "photon boy\n----------\nframe %d\nf/sec %d\n#free %d\n#live %d\nlevel %d",
 			frame, static_cast<unsigned int>(1.0f / frametime), PXPLIMIT-pxppoolcursor, pxppoolcursor, lvlcurr+1);
 		
 		dstr(10, 10, txt, RGB(255,255,255));
@@ -1162,7 +1173,7 @@ int main(int argc, char * argv[])
 	glfwEnable(GLFW_STICKY_KEYS);
 	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
 	glfwOpenWindow(WINW, WINH, 8, 8, 8, 0, 0, 0, GLFW_WINDOW);
-	glfwSetWindowTitle("Photon Boy 1e-7");
+	glfwSetWindowTitle("photonboy 1e-7");
     
 	// init buffers
 	glGenTextures(1, &texid);
