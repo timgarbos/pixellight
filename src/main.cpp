@@ -116,6 +116,8 @@ float			texc[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f };
 //bool			ground	= false;
 unsigned int	normpre	= 0;
 
+float off_ground_ratio = 0.0f;
+
 /*
 	dchr
 */
@@ -792,6 +794,8 @@ void game()
     float frame_time;
     float delta_time;
 
+    int frames_off_ground = 0;
+    
 	while (true)
 	{
         // calc delta time.
@@ -800,8 +804,23 @@ void game()
         frame_time_last = frame_time;
         
         audioManager->update_channels(delta_time);
+ 
+        if(normpre != NORM_N)
+        {
+            frames_off_ground++;
+        }
+        else 
+        {
+            frames_off_ground = 0;
+        }
         
-		frame++;
+        off_ground_ratio += (frames_off_ground > 3 ? 1.0f : -0.5f) * 2.0f * delta_time; 
+        off_ground_ratio = min(off_ground_ratio, 1.0f);
+        off_ground_ratio = max(off_ground_ratio, 0.0f);
+ 
+        audioManager->off_ground_ratio = off_ground_ratio;
+        
+        frame++;
 		frametime0 = static_cast<float>(glfwGetTime());
 
         RaysPerFrame = RAYSFRAME+RAYSFRAMEDEV*sin(glfwGetTime()*5.0f);

@@ -21,6 +21,8 @@ public:
     AudioChannel *background_ambience;
     std::vector<AudioChannel*> channels;
 
+    float off_ground_ratio;
+    
     void update_channels(float deltaTime);
     
 private:
