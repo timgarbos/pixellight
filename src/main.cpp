@@ -8,6 +8,7 @@ pixellight!
 
 // libc++
 #include <iostream>
+#include <map>
 
 // GL
 #include <GL/glfw.h>
@@ -32,8 +33,11 @@ pixellight!
 #define TX(x,y)		(texdata + (x) + (y)*TEXW)
 #define FF(n)		(n & 0xff)
 #define RGB(r,g,b)	(0xff000000 | (FF(b)<<16) | (FF(g)<<8) | (FF(r)))
-#define RANDRGB		(RGB(rand()%256,rand()%256,rand()%256))
-#define RANDRGB2(r,g,b,mod)	(RGB(max(0,min(255,r+rand()%mod)),max(0,min(255,g+rand()%mod)),max(0,min(255,b+rand()%mod))))
+#define RGBA(r,g,b,a)	((FF(a)<<24) | (FF(b)<<16) | (FF(g)<<8) | (FF(r)))
+#define RANDRGB_		(RGB(rand()%256,rand()%256,rand()%256))
+#define RANDRGB		(RGBA(rand()%256,rand()%256,rand()%256,120))
+#define RANDRGB2_(r,g,b,mod)	(RGB(max(0,min(255,r+rand()%mod)),max(0,min(255,g+rand()%mod)),max(0,min(255,b+rand()%mod))))
+#define RANDRGB2(r,g,b,mod)	(RGBA(max(0,min(255,r+rand()%mod)),max(0,min(255,g+rand()%mod)),max(0,min(255,b+rand()%mod)),120))
 
 #define DT			0.01666667f
 #define PI			3.14159265f
@@ -41,8 +45,8 @@ pixellight!
 #define RAYSFRAME			3100
 #define RAYSFRAMEDEV		1500
 
-#define PARTICLESFRAME		1000
-#define PARTICLESFRAMEDEV	800
+#define PARTICLESFRAME		1200
+#define PARTICLESFRAMEDEV	1200
 
 #define TRACEDEBUG	0
 
@@ -117,6 +121,7 @@ float			texc[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f };
 unsigned int	normpre	= 0;
 
 float off_ground_ratio = 0.0f;
+std::map<Geom *, Vec2> goals;
 
 /*
 	dchr
@@ -516,6 +521,38 @@ LevelNode* createDebugWorld()
 }
 
 /*
+	grav
+*/
+inline float grav(float d)
+{
+	//if (d < 0.0001f)
+	//{
+	//	return 0.0f;
+	//}
+	//else
+	//{
+	//	return 0.1f * std::pow(std::min(1.0f, d)-1.0f, 4);
+	//}
+	return 5.0f * std::pow(1.0f / (1.0f + 20.0f * d), 1);
+}
+
+/*
+	fisr
+*/
+inline float fisr(float x)
+{
+	float h = 0.5f*x;
+	unsigned int i = *(unsigned int*)&x;
+	
+	i = 0x5f3759df - (i >> 1);
+	
+	x = *(float*)&i;
+	x = x*(1.5f - h*x*x);
+	
+	return x;
+}
+
+/*
 	pxp_emit
 */
 void pxp_emit(unsigned int ttl, float vx, float vy, float xx, float xy, unsigned int color)
@@ -538,6 +575,15 @@ void pxp_emit(unsigned int ttl, float vx, float vy, float xx, float xy, unsigned
 */
 void pxp_step(float dt)
 {
+	int		gnum = 0;
+	int		gcnt = goals.size();
+	Vec2 *	gpos = new Vec2[gcnt];
+
+	for (std::map<Geom *, Vec2>::iterator it = goals.begin(); it != goals.end(); it++)
+	{
+		gpos[gnum++] = it->second;
+	}
+
 	//#pragma omp parallel for
 	for (int i = 0; i < PXPLIMIT; i++)
 	{
@@ -551,11 +597,27 @@ void pxp_step(float dt)
 			}
 			else
 			{
+				for (int j = 0; j < gcnt; j++)
+				{
+					float dx = p.xx - gpos[j].x;
+					float dy = p.xy - gpos[j].y;
+
+					float r = fisr(dx*dx + dy*dy);
+
+					if (r > 10.0f)
+					{
+						p.vx -= dt * 5.0f * dx * r;
+						p.vy -= dt * 5.0f * dy * r;
+					}
+				}
+
 				p.xx += dt * p.vx;
 				p.xy += dt * p.vy;
 			}
 		}
 	}
+
+	delete[] gpos;
 }
 
 /*
@@ -572,8 +634,13 @@ void pxp_plot()
 	memset(texdata, 0, (TEXW*TEXH)<<2);
 
 	//#pragma omp parallel for
+	int pixelSize = 1;
+
 	for (int i = 0; i < PXPLIMIT; i++)
 	{
+		//pixelSize = i%120==0?2:1;
+		//pixelSize = i%401==0?4:pixelSize;
+
 		pxp const & p = pxpdata[i];
 		
 		if (p.ttl != 0)
@@ -581,14 +648,22 @@ void pxp_plot()
 			x = static_cast<int>(p.xx * ex + ex);
 			y = static_cast<int>(p.xy * ey + ey);
 			
-			if (x >= 0 && x <= TEXW-1 &&
-				y >= 0 && y <= TEXH-1)
-			{
-				*TX(x,y) = p.color;
+				for(int ix=x-pixelSize/2;ix<x+pixelSize;ix++)
+				{
+					for(int iy=y-pixelSize/2;iy<y+pixelSize;iy++)
+					{
+						if (ix >= 0 && ix <= TEXW-1 &&
+								iy >= 0 && iy <= TEXH-1)
+						{
+							*TX(ix,iy) = p.color;
+						}
+					}
+				}
+
 			}
 		}
 	}
-}
+
 
 /*
 	move_player
@@ -777,7 +852,7 @@ void capFramerate(double fps) {
 void game()
 {
 	float		frametime0;
-	float		scale = 0.3f;
+	float		scale = 0.2f;
 	float		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
 	float		particleTheta = (2.0f * PI) / static_cast<float>(PARTICLESFRAME);
 	char		txt[100];
@@ -828,6 +903,9 @@ void game()
 		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
 		particleTheta = (2.0f * PI) / static_cast<float>(ParticlesPerFrame);
 
+		// clear goals
+		goals.clear();
+
 		// poll input
 		glfwPollEvents();
 
@@ -869,6 +947,30 @@ void game()
 			move_view(mov);
 		}
 		*/
+		if (glfwGetKey('1') == GLFW_PRESS)
+		{
+			root = LevelLoader::LoadXml(0);
+			pos.x = 0;
+			pos.y = 0;
+		}
+		if (glfwGetKey('2') == GLFW_PRESS)
+		{
+			root = LevelLoader::LoadXml(1);
+			pos.x = 0;
+			pos.y = 0;
+		}
+		if (glfwGetKey('3') == GLFW_PRESS)
+		{
+			root = LevelLoader::LoadXml(2);
+			pos.x = 0;
+			pos.y = 0;
+		}
+		if (glfwGetKey('4') == GLFW_PRESS)
+		{
+			root = LevelLoader::LoadXml(3);
+			pos.x = 0;
+			pos.y = 0;
+		}
 
 		// mooo
 		if (glfwGetKey(GLFW_KEY_BACKSPACE) == GLFW_PRESS)
@@ -880,25 +982,39 @@ void game()
 		glClear(GL_COLOR_BUFFER_BIT);
 		glColor3f(1.0f, 1.0f, 1.0f);
 
-		// move particles
-		pxp_step(DT);
-
 		// emit particles
 		for (unsigned int i = 0; i < ParticlesPerFrame; i++)
 		{
-			float a = particleTheta*i + 0.6f*sin(15.0f*glfwGetTime());
+			float a = particleTheta*i + 0.6f*sin(10.0f*glfwGetTime());
 
 			dir.x = cos(a);
 			dir.y = sin(a);
 
-			trace(root, pos, dir, 15.0f, tr);
+			trace(root, pos, dir, 10.0f, tr);
 			rot90(dir, 4-ccw);
 
 			float spd = 0.9f + 0.15f * (rand() % 100);
-			float ttl = (60.0f/spd) * tr.d;
+			float ttl = 1.0f + (60.0f/spd) * tr.d;
 
 			pxp_emit(static_cast<unsigned int>(ttl), spd*scale*dir.x, spd*scale*dir.y, 0.0f, 0.0f, i%root->colorMod==0?RANDRGB2(root->colorR,root->colorG,root->colorB,80):RANDRGB);
+
+			if (tr.geom != NULL && tr.geom->isGoal)
+			{
+				pxp_emit(60, spd*0.3f*dir.x, spd*0.3f*dir.y, scale*dir.x*tr.d, scale*dir.y*tr.d, RGB(tr.geom->colorR,tr.geom->colorG,tr.geom->colorB));
+
+				/* gravity goals doesn't look good, scrapped
+				std::map<Geom *, Vec2>::iterator it = goals.find(tr.geom);
+
+				if (it == goals.end())
+				{
+					goals[tr.geom] = Vec2(scale*tr.d*dir.x, scale*tr.d*dir.y);
+				}
+				*/
+			}
 		}
+
+		// move particles
+		pxp_step(DT);
 
 		// plot particles
 		pxp_plot();
@@ -907,11 +1023,14 @@ void game()
 		frametime = static_cast<float>(glfwGetTime()) - frametime0;
 
 		// plot some text
-		sprintf(txt, "frame %d\nf/sec %d\n#free %d\n#live %d", frame, static_cast<unsigned int>(1.0f / frametime),
+		sprintf(txt, "photon boy\n----------\nframe %d\nf/sec %d\n#free %d\n#live %d",
+			frame, static_cast<unsigned int>(1.0f / frametime),
 			PXPLIMIT-pxppoolcursor, pxppoolcursor);
 		
 		dstr(10, 10, txt, RGB(255,255,255));
 
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 		// draw plot
 		glEnable(GL_TEXTURE_2D);
 		{
@@ -933,8 +1052,7 @@ void game()
 		// draw some rays
 		glColor4f(1.0f, 1.0f, 1.0f, 0.005f);
 		glLineWidth(25.0f);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
 
 		for (unsigned int i = 0; i < RaysPerFrame; i++)
 		{
@@ -957,7 +1075,7 @@ void game()
 
 		// swap
 		glfwSwapBuffers();
-
+		
 		// next frame
 		capFramerate(60.0);
 	}

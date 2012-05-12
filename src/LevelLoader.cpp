@@ -99,27 +99,28 @@ LevelNode* LevelLoader::LoadXml(int index)
 			newNode->colorG = node->ToElement()->IntAttribute("g");
 			newNode->colorB = node->ToElement()->IntAttribute("b");
 			newNode->colorMod = node->ToElement()->IntAttribute("m");
-            newNode->audio = node->ToElement()->IntAttribute("audio");
-            
-			if(newNode->colorMod==0)
-				newNode->colorMod = 4;
+			//if(newNode->colorMod==0)
+				newNode->colorMod = 1;
 			
 			XMLNode * object;
 			if(node->FirstChild())
 			for(object = node->FirstChild()->FirstChild(); object; object = object->NextSibling() )
 			{
-				Geom* newGeom = new Geom(true,Vec2(0,0));
+				Geom* newGeom = new Geom(true,false,Vec2(0,0),0,0,0);
 				GeomInstance* newGeomInstance = new GeomInstance(Vec2(0,0),newGeom);
 
-			
 				newGeomInstance->pos.x = object->ToElement()->FloatAttribute("x");
 				newGeomInstance->pos.y = object->ToElement()->FloatAttribute("y");
 
-				newGeom->extends.x = object->ToElement()->FloatAttribute("extendsX")-1e-7;
-				newGeom->extends.y = object->ToElement()->FloatAttribute("extendsY")-1e-7;
+				newGeom->colorR = object->ToElement()->IntAttribute("colorR");
+				newGeom->colorG = object->ToElement()->IntAttribute("colorG");
+				newGeom->colorB = object->ToElement()->IntAttribute("colorB");
+
+				newGeom->extends.x = object->ToElement()->FloatAttribute("extendsX")-(1e-7);
+				newGeom->extends.y = object->ToElement()->FloatAttribute("extendsY")-(1e-7);
 
 				newGeom->isStatic = object->ToElement()->BoolAttribute("type");
-
+				newGeom->isGoal = object->ToElement()->BoolAttribute("goal");
 
 				newNode->objs.push_back(newGeomInstance);
 
@@ -133,7 +134,7 @@ LevelNode* LevelLoader::LoadXml(int index)
 		 
 		XMLNode * level = doc->FirstChild()->FirstChild()->FirstChild();
 		for(int i = 0; i<index;i++)
-			level->NextSibling();
+			level = level->NextSibling();
 
 		rootNode = levelNodes[level->ToElement()->IntAttribute("start")];
 		XMLNode * edge;
