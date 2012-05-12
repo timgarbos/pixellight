@@ -106,7 +106,7 @@ LevelNode* LevelLoader::LoadXml(int index)
 			if(node->FirstChild())
 			for(object = node->FirstChild()->FirstChild(); object; object = object->NextSibling() )
 			{
-				Geom* newGeom = new Geom(true,false,Vec2(0,0),0,0,0);
+				Geom* newGeom = new Geom(true,false,false,Vec2(0,0),0,0,0);
 				GeomInstance* newGeomInstance = new GeomInstance(Vec2(0,0),newGeom);
 
 				newGeomInstance->pos.x = object->ToElement()->FloatAttribute("x");
@@ -121,6 +121,7 @@ LevelNode* LevelLoader::LoadXml(int index)
 
 				newGeom->isStatic = object->ToElement()->BoolAttribute("type");
 				newGeom->isGoal = object->ToElement()->BoolAttribute("goal");
+				newGeom->isBad = object->ToElement()->BoolAttribute("bad");
 
 				newNode->objs.push_back(newGeomInstance);
 
