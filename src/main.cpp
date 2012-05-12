@@ -45,7 +45,7 @@ pixellight!
 #define RAYSFRAMEDEV		1500
 
 #define PARTICLESFRAME		1200
-#define PARTICLESFRAMEDEV	800
+#define PARTICLESFRAMEDEV	1200
 
 #define TRACEDEBUG	0
 
@@ -575,8 +575,8 @@ void pxp_plot()
 
 	for (int i = 0; i < PXPLIMIT; i++)
 	{
-		pixelSize = i%120==0?2:1;
-		pixelSize = i%401==0?4:pixelSize;
+		//pixelSize = i%120==0?2:1;
+		//pixelSize = i%401==0?4:pixelSize;
 
 		pxp const & p = pxpdata[i];
 		
