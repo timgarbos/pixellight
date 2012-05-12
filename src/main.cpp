@@ -6,6 +6,7 @@ pixellight!
 
 // libc++
 #include <iostream>
+#include <map>
 
 // GL
 #include <GL/glfw.h>
@@ -115,6 +116,8 @@ float			texc[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f };
 
 //bool			ground	= false;
 unsigned int	normpre	= 0;
+
+std::map<Geom *, Vec2> goals;
 
 /*
 	dchr
@@ -512,6 +515,38 @@ LevelNode* createDebugWorld()
 }
 
 /*
+	grav
+*/
+inline float grav(float d)
+{
+	//if (d < 0.0001f)
+	//{
+	//	return 0.0f;
+	//}
+	//else
+	//{
+	//	return 0.1f * std::pow(std::min(1.0f, d)-1.0f, 4);
+	//}
+	return 5.0f * std::pow(1.0f / (1.0f + 20.0f * d), 1);
+}
+
+/*
+	fisr
+*/
+inline float fisr(float x)
+{
+	float h = 0.5f*x;
+	unsigned int i = *(unsigned int*)&x;
+	
+	i = 0x5f3759df - (i >> 1);
+	
+	x = *(float*)&i;
+	x = x*(1.5f - h*x*x);
+	
+	return x;
+}
+
+/*
 	pxp_emit
 */
 void pxp_emit(unsigned int ttl, float vx, float vy, float xx, float xy, unsigned int color)
@@ -534,6 +569,15 @@ void pxp_emit(unsigned int ttl, float vx, float vy, float xx, float xy, unsigned
 */
 void pxp_step(float dt)
 {
+	int		gnum = 0;
+	int		gcnt = goals.size();
+	Vec2 *	gpos = new Vec2[gcnt];
+
+	for (std::map<Geom *, Vec2>::iterator it = goals.begin(); it != goals.end(); it++)
+	{
+		gpos[gnum++] = it->second;
+	}
+
 	//#pragma omp parallel for
 	for (int i = 0; i < PXPLIMIT; i++)
 	{
@@ -547,11 +591,27 @@ void pxp_step(float dt)
 			}
 			else
 			{
+				for (int j = 0; j < gcnt; j++)
+				{
+					float dx = p.xx - gpos[j].x;
+					float dy = p.xy - gpos[j].y;
+
+					float r = fisr(dx*dx + dy*dy);
+
+					if (r > 10.0f)
+					{
+						p.vx -= dt * 5.0f * dx * r;
+						p.vy -= dt * 5.0f * dy * r;
+					}
+				}
+
 				p.xx += dt * p.vx;
 				p.xy += dt * p.vy;
 			}
 		}
 	}
+
+	delete[] gpos;
 }
 
 /*
@@ -764,7 +824,7 @@ void capFramerate(double fps) {
 void game()
 {
 	float		frametime0;
-	float		scale = 0.3f;
+	float		scale = 0.1f;
 	float		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
 	float		particleTheta = (2.0f * PI) / static_cast<float>(PARTICLESFRAME);
 	char		txt[100];
@@ -786,6 +846,9 @@ void game()
 		ParticlesPerFrame = PARTICLESFRAME+PARTICLESFRAMEDEV*sin(PI+glfwGetTime()*5.0f);
 		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
 		particleTheta = (2.0f * PI) / static_cast<float>(ParticlesPerFrame);
+
+		// clear goals
+		goals.clear();
 
 		// poll input
 		glfwPollEvents();
@@ -839,9 +902,6 @@ void game()
 		glClear(GL_COLOR_BUFFER_BIT);
 		glColor3f(1.0f, 1.0f, 1.0f);
 
-		// move particles
-		pxp_step(DT);
-
 		// emit particles
 		for (unsigned int i = 0; i < ParticlesPerFrame; i++)
 		{
@@ -854,10 +914,51 @@ void game()
 			rot90(dir, 4-ccw);
 
 			float spd = 0.9f + 0.15f * (rand() % 100);
-			float ttl = (60.0f/spd) * tr.d;
+			float ttl = 1 + (60.0f/spd) * tr.d;
 
 			pxp_emit(static_cast<unsigned int>(ttl), spd*scale*dir.x, spd*scale*dir.y, 0.0f, 0.0f, i%root->colorMod==0?RANDRGB2(root->colorR,root->colorG,root->colorB,80):RANDRGB);
+
+			if (tr.geom != NULL && tr.geom->extends.x < 0.5f/* need proper goal flag */)
+			{
+				float nx;
+				float ny;
+
+				tr.norm = ((4 + (tr.norm-1) - (ccw + tr.ccw)%4) % 4) + 1;
+
+				switch (tr.norm)
+				{
+				case NORM_E:
+					nx = 1.0f;
+					ny = 0.0f;
+					break;
+				case NORM_W:
+					nx = -1.0f;
+					ny = 0.0f;
+					break;
+				case NORM_N:
+					nx = 0.0f;
+					ny = 1.0f;
+					break;
+				case NORM_S:
+					nx = 0.0f;
+					ny = -1.0f;
+					break;
+				}
+
+				pxp_emit(10, -0.1f*nx, -0.1f*ny, scale*dir.x*tr.d, scale*dir.y*tr.d, RGB(255,0,0));
+				/*
+				std::map<Geom *, Vec2>::iterator it = goals.find(tr.geom);
+
+				if (it == goals.end())
+				{
+					goals[tr.geom] = Vec2(scale*tr.d*dir.x, scale*tr.d*dir.y);
+				}
+				*/
+			}
 		}
+
+		// move particles
+		pxp_step(DT);
 
 		// plot particles
 		pxp_plot();
@@ -866,7 +967,8 @@ void game()
 		frametime = static_cast<float>(glfwGetTime()) - frametime0;
 
 		// plot some text
-		sprintf(txt, "frame %d\nf/sec %d\n#free %d\n#live %d", frame, static_cast<unsigned int>(1.0f / frametime),
+		sprintf(txt, "photon boy\n----------\nframe %d\nf/sec %d\n#free %d\n#live %d",
+			frame, static_cast<unsigned int>(1.0f / frametime),
 			PXPLIMIT-pxppoolcursor, pxppoolcursor);
 		
 		dstr(10, 10, txt, RGB(255,255,255));
