@@ -131,7 +131,7 @@ LevelNode* LevelLoader::LoadXml(int index)
 		 
 		XMLNode * level = doc->FirstChild()->FirstChild()->FirstChild();
 		for(int i = 0; i<index;i++)
-			level->NextSibling();
+			level = level->NextSibling();
 
 		rootNode = levelNodes[level->ToElement()->IntAttribute("start")];
 		XMLNode * edge;
