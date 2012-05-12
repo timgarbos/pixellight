@@ -3,7 +3,11 @@
 #include "tinyxml2.h"
 #include "LevelNode.h"
 #include "LevelLoadNode.h"
+#ifdef _WIN32
+#include <hash_map>
+#else
 #include <hash_map.h>
+#endif
 
 #include <vector>
 
