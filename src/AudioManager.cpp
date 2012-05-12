@@ -8,8 +8,8 @@ using namespace std;
 AudioManager::AudioManager()
 {
     initialize_fmod();
-    initialize_background_ambience();
     initialize_channels();
+    initialize_background_ambience();
 
     for(vector<AudioChannel*>::iterator it = channels.begin(); it != channels.end(); ++it)
     {
@@ -43,6 +43,14 @@ void AudioManager::initialize_background_ambience()
 {
     background_ambience = new AudioChannel(system, "audio/white-noise.wav");
     background_ambience->playSound();
+    
+    evil = new AudioChannel(system, "audio/evil.wav");
+    evil->playSound();
+    evil->setVolumeTarget(1.0f, 1.0f/3.0f);
+    
+    channels.push_back(evil);
+    
+    off_ground_ratio = 0.0f;
 }
 
 void AudioManager::initialize_channels()
@@ -63,7 +71,7 @@ void AudioManager::update_channels(float deltaTime)
         (*it)->update(deltaTime);
     }
     
-    float pulse = sin(glfwGetTime()*5.0f + 0.15f);
+    float pulse = (off_ground_ratio * 0.8f + 0.2f) * sin(glfwGetTime()*5.0f + 0.15f);
     pulse = pulse > 0.0f ? pulse : 0.0f;
     
     background_ambience->setVolume((pulse * (1.0f - BACKGROUND_AMBIENCE_FLOOR) + BACKGROUND_AMBIENCE_FLOOR) * 0.1f) ;

@@ -120,6 +120,7 @@ float			texc[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f };
 //bool			ground	= false;
 unsigned int	normpre	= 0;
 
+float off_ground_ratio = 0.0f;
 std::map<Geom *, Vec2> goals;
 
 /*
@@ -770,15 +771,13 @@ void move_player()
         // in that case, space may have rotated
 		ccw = (ccw + tr.ccw) % 4;
  
-        cout << "audio: " << tr.node->audio << endl;
-        
         // fade out
         if(root->audio < audioManager->channels.size())
-            audioManager->channels[root->audio]->setVolumeTarget(0.0f, 0.5f);
+            audioManager->channels[root->audio]->setVolumeTarget(0.0f, 1.0f/4.0f);
 
         // fade in
         if(tr.node->audio < audioManager->channels.size())
-            audioManager->channels[tr.node->audio]->setVolumeTarget(1.0f, 0.5f);
+            audioManager->channels[tr.node->audio]->setVolumeTarget(0.5f, 1.0f/4.0f);
  	}
 
 	// if player was obstructed, then respond to the contact
@@ -870,6 +869,8 @@ void game()
     float frame_time;
     float delta_time;
 
+    int frames_off_ground = 0;
+    
 	while (true)
 	{
         // calc delta time.
@@ -878,8 +879,23 @@ void game()
         frame_time_last = frame_time;
         
         audioManager->update_channels(delta_time);
+ 
+        if(normpre != NORM_N)
+        {
+            frames_off_ground++;
+        }
+        else 
+        {
+            frames_off_ground = 0;
+        }
         
-		frame++;
+        off_ground_ratio += (frames_off_ground > 3 ? 1.0f : -0.5f) * 2.0f * delta_time; 
+        off_ground_ratio = min(off_ground_ratio, 1.0f);
+        off_ground_ratio = max(off_ground_ratio, 0.0f);
+ 
+        audioManager->off_ground_ratio = off_ground_ratio;
+        
+        frame++;
 		frametime0 = static_cast<float>(glfwGetTime());
 
         RaysPerFrame = RAYSFRAME+RAYSFRAMEDEV*sin(glfwGetTime()*5.0f);
@@ -969,7 +985,8 @@ void game()
 		// emit particles
 		for (unsigned int i = 0; i < ParticlesPerFrame; i++)
 		{
-			float a = particleTheta*i + 0.6f*sin(10.0f*glfwGetTime());
+			float	a = particleTheta*i + 0.6f*sin(10.0f*glfwGetTime());
+			Geom *	g = NULL;
 
 			dir.x = cos(a);
 			dir.y = sin(a);
@@ -982,9 +999,9 @@ void game()
 
 			pxp_emit(static_cast<unsigned int>(ttl), spd*scale*dir.x, spd*scale*dir.y, 0.0f, 0.0f, i%root->colorMod==0?RANDRGB2(root->colorR,root->colorG,root->colorB,80):RANDRGB);
 
-			if (tr.geom != NULL)
+			if ((g = tr.geom) != NULL && (g->colorR | g->colorG | g->colorB) != 0)
 			{
-				pxp_emit(60, spd*0.3f*dir.x, spd*0.3f*dir.y, scale*dir.x*tr.d, scale*dir.y*tr.d, RGB(tr.geom->colorR,tr.geom->colorG,tr.geom->colorB));
+				pxp_emit(60, spd*0.3f*dir.x, spd*0.3f*dir.y, scale*dir.x*tr.d, scale*dir.y*tr.d, RGB(g->colorR,g->colorG,g->colorB));
 
 				/* gravity goals doesn't look good, scrapped
 				std::map<Geom *, Vec2>::iterator it = goals.find(tr.geom);
@@ -1177,8 +1194,6 @@ int main(int argc, char * argv[])
 
     delete audioManager;
     
-	// nuke
-
 	// nuke buffers
 	delete[] texdata;
 	delete[] pxpdata;
