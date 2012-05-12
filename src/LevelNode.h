@@ -29,9 +29,8 @@ public:
 	int colorG;
 	int colorB;
 	int colorMod;
-
-
-
+    int audio;
+    
 	list<GeomInstance*> objs;
 
 };

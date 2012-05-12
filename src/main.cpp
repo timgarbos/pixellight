@@ -4,14 +4,13 @@ pixellight!
 
 */
 
+#include <cmath>
+
 // libc++
 #include <iostream>
 
 // GL
 #include <GL/glfw.h>
-
-// fmod
-#include <fmod.hpp>
 
 // local
 #include "Vec2.h"
@@ -19,6 +18,7 @@ pixellight!
 #include "LevelEdge.h"
 #include "Geom.h"
 #include "LevelLoader.h"
+#include "AudioManager.h"
 #include "f3x5.h"
 
 /*
@@ -181,6 +181,8 @@ void dstr(unsigned int x0, unsigned int y0, char const * s, unsigned int color)
 		}
 	}
 }
+
+AudioManager *audioManager;
 
 /*
 	rayline
@@ -704,9 +706,20 @@ void move_player()
 	// did we change root?
 	if (root != tr.node)
 	{
-		// in that case, space may have rotated
+        
+        // in that case, space may have rotated
 		ccw = (ccw + tr.ccw) % 4;
-	}
+ 
+        cout << "audio: " << tr.node->audio << endl;
+        
+        // fade out
+        if(root->audio < audioManager->channels.size())
+            audioManager->channels[root->audio]->setVolumeTarget(0.0f, 0.5f);
+
+        // fade in
+        if(tr.node->audio < audioManager->channels.size())
+            audioManager->channels[tr.node->audio]->setVolumeTarget(1.0f, 0.5f);
+ 	}
 
 	// if player was obstructed, then respond to the contact
 	if (tr.norm != 0)
@@ -793,12 +806,23 @@ void game()
 	pos.y	= 0.0f;
 	ccw		= 0;
 
+    float frame_time_last = glfwGetTime();
+    float frame_time;
+    float delta_time;
+
 	while (true)
 	{
+        // calc delta time.
+        frame_time = glfwGetTime();
+        delta_time = frame_time - frame_time_last;
+        frame_time_last = frame_time;
+        
+        audioManager->update_channels(delta_time);
+        
 		frame++;
 		frametime0 = static_cast<float>(glfwGetTime());
 
-		RaysPerFrame = RAYSFRAME+RAYSFRAMEDEV*sin(glfwGetTime()*5.0f);
+        RaysPerFrame = RAYSFRAME+RAYSFRAMEDEV*sin(glfwGetTime()*5.0f);
 		ParticlesPerFrame = PARTICLESFRAME+PARTICLESFRAMEDEV*sin(PI+glfwGetTime()*5.0f);
 		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
 		particleTheta = (2.0f * PI) / static_cast<float>(ParticlesPerFrame);
@@ -1044,8 +1068,10 @@ int main(int argc, char * argv[])
 	glfwEnable(GLFW_STICKY_KEYS);
 	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
 	glfwOpenWindow(WINW, WINH, 8, 8, 8, 0, 0, 0, GLFW_WINDOW);
-	glfwSetWindowTitle("pixellight");
-
+	glfwSetWindowTitle("Photon Boy");
+    
+    audioManager = new AudioManager();
+    
 	// init buffers
 	glGenTextures(1, &texid);
 	glBindTexture(GL_TEXTURE_2D, texid);
@@ -1071,6 +1097,10 @@ int main(int argc, char * argv[])
 	game();
 	//editor();
 
+    delete audioManager;
+    
+	// nuke
+
 	// nuke buffers
 	delete[] texdata;
 	delete[] pxpdata;
@@ -1078,7 +1108,7 @@ int main(int argc, char * argv[])
 
 	// nuke glfw
 	glfwCloseWindow();
-
+    
 	// done
 	return 0;
 }
