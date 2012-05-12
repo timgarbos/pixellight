@@ -123,6 +123,7 @@ int				lvlnext	= 0;
 unsigned int	wait	= 0;
 bool			died	= false;
 
+float off_ground_ratio = 0.0f;
 std::map<Geom *, Vec2> goals;
 
 /*
@@ -773,15 +774,13 @@ void move_player()
         // in that case, space may have rotated
 		ccw = (ccw + tr.ccw) % 4;
  
-        cout << "audio: " << tr.node->audio << endl;
-        
         // fade out
         if(root->audio < audioManager->channels.size())
-            audioManager->channels[root->audio]->setVolumeTarget(0.0f, 0.5f);
+            audioManager->channels[root->audio]->setVolumeTarget(0.0f, 1.0f/4.0f);
 
         // fade in
         if(tr.node->audio < audioManager->channels.size())
-            audioManager->channels[tr.node->audio]->setVolumeTarget(1.0f, 0.5f);
+            audioManager->channels[tr.node->audio]->setVolumeTarget(0.5f, 1.0f/4.0f);
  	}
 
 	// if player was obstructed, then respond to the contact
@@ -889,6 +888,8 @@ void game()
     float frame_time;
     float delta_time;
 
+    int frames_off_ground = 0;
+    
 	while (true)
 	{
         // calc delta time.
@@ -897,8 +898,23 @@ void game()
         frame_time_last = frame_time;
         
         audioManager->update_channels(delta_time);
+ 
+        if(normpre != NORM_N)
+        {
+            frames_off_ground++;
+        }
+        else 
+        {
+            frames_off_ground = 0;
+        }
         
-		frame++;
+        off_ground_ratio += (frames_off_ground > 3 ? 1.0f : -0.5f) * 2.0f * delta_time; 
+        off_ground_ratio = min(off_ground_ratio, 1.0f);
+        off_ground_ratio = max(off_ground_ratio, 0.0f);
+ 
+        audioManager->off_ground_ratio = off_ground_ratio;
+        
+        frame++;
 		frametime0 = static_cast<float>(glfwGetTime());
 
         RaysPerFrame = RAYSFRAME+RAYSFRAMEDEV*sin(glfwGetTime()*5.0f);
@@ -1083,7 +1099,7 @@ int main(int argc, char * argv[])
 	glfwEnable(GLFW_STICKY_KEYS);
 	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
 	glfwOpenWindow(WINW, WINH, 8, 8, 8, 0, 0, 0, GLFW_WINDOW);
-	glfwSetWindowTitle("photonboy 1e-7");
+	glfwSetWindowTitle("Photon Boy 1e-7");
     
 	// init buffers
 	glGenTextures(1, &texid);

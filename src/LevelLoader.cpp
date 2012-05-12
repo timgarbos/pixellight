@@ -101,6 +101,8 @@ LevelNode* LevelLoader::LoadXml(int index)
 			newNode->colorMod = node->ToElement()->IntAttribute("m");
 			//if(newNode->colorMod==0)
 				newNode->colorMod = 1;
+            
+            newNode->audio = node->ToElement()->IntAttribute("audio");
 			
 			XMLNode * object;
 			if(node->FirstChild())
