@@ -2,6 +2,16 @@
 
   <levels>
 
+
+    <level start="10">
+      <edge start="0" end="10" side="0" ccw="1"/>
+      <edge start="10" end="11" side="1" ccw="0"/>
+      <edge start="11" end="12" side="1" ccw="0"/>
+      <edge start="12" end="0" side="1" ccw="0"/>
+      <edge start="0" end="30" side="1" ccw="0"/>
+    </level>
+
+    
     <level start="10">
       <edge start="10" end="11" side="1" ccw="0"/>
       <edge start="11" end="12" side="1" ccw="0"/>
@@ -99,14 +109,6 @@
      
     </level>
 
-
-    <level start="10">
-      <edge start="0" end="10" side="0" ccw="1"/>
-      <edge start="10" end="11" side="1" ccw="0"/>
-      <edge start="11" end="12" side="1" ccw="0"/>
-      <edge start="12" end="0" side="1" ccw="0"/>
-      <edge start="0" end="30" side="1" ccw="0"/>
-    </level>
 
 
 
