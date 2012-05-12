@@ -4,14 +4,14 @@ pixellight!
 
 */
 
+#include <cmath>
+
 // libc++
 #include <iostream>
 
 // GL
 #include <GL/glfw.h>
 
-// fmod
-#include <fmod.hpp>
 
 // local
 #include "Vec2.h"
@@ -19,6 +19,7 @@ pixellight!
 #include "LevelEdge.h"
 #include "Geom.h"
 #include "LevelLoader.h"
+#include "AudioManager.h"
 
 /*
 	MACROS
@@ -47,6 +48,8 @@ Vec2		v11 = Vec2(1.0f, 1.0f);		// upper right
 LevelNode *	root;
 Vec2		pos;
 int			ccw;
+
+AudioManager *audioManager;
 
 /*
 	rayline
@@ -415,8 +418,19 @@ void game()
 	pos.y	= 0.0f;
 	ccw		= 0;
 
+    float frame_time_last = glfwGetTime();
+    float frame_time;
+    float delta_time;
+    
 	while (true)
 	{
+        // calc delta time.
+        frame_time = glfwGetTime();
+        delta_time = frame_time - frame_time_last;
+        frame_time_last = frame_time;
+        
+        audioManager->update_channels(delta_time);
+        
 		glfwPollEvents();
 
 		// quit on escape
@@ -571,14 +585,18 @@ int main(int argc, char * argv[])
 	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
 	glfwOpenWindow(WINW, WINH, 8, 8, 8, 8, 0, 0, GLFW_WINDOW);
 	glfwSetWindowTitle("pixellight");
-
+    
+    audioManager = new AudioManager();
+    
 	// loop
 	game();
 	//editor();
 
+    delete audioManager;
+    
 	// nuke
 	glfwCloseWindow();
-
+    
 	// done
 	return 0;
 }
