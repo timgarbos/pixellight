@@ -8,8 +8,8 @@ using namespace std;
 AudioManager::AudioManager()
 {
     initialize_fmod();
-    initialize_background_ambience();
     initialize_channels();
+    initialize_background_ambience();
 
     for(vector<AudioChannel*>::iterator it = channels.begin(); it != channels.end(); ++it)
     {
@@ -43,6 +43,12 @@ void AudioManager::initialize_background_ambience()
 {
     background_ambience = new AudioChannel(system, "audio/white-noise.wav");
     background_ambience->playSound();
+    
+    evil = new AudioChannel(system, "audio/evil.wav");
+    evil->playSound();
+    evil->setVolumeTarget(1.0f, 1.0f/3.0f);
+    
+    channels.push_back(evil);
 }
 
 void AudioManager::initialize_channels()

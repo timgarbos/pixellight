@@ -16,7 +16,8 @@ class AudioManager
 public:
     AudioManager();
     ~AudioManager();
-    
+
+    AudioChannel *evil;
     AudioChannel *background_ambience;
     std::vector<AudioChannel*> channels;
 

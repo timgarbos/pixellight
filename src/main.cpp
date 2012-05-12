@@ -694,15 +694,13 @@ void move_player()
         // in that case, space may have rotated
 		ccw = (ccw + tr.ccw) % 4;
  
-        cout << "audio: " << tr.node->audio << endl;
-        
         // fade out
         if(root->audio < audioManager->channels.size())
-            audioManager->channels[root->audio]->setVolumeTarget(0.0f, 0.5f);
+            audioManager->channels[root->audio]->setVolumeTarget(0.0f, 1.0f/4.0f);
 
         // fade in
         if(tr.node->audio < audioManager->channels.size())
-            audioManager->channels[tr.node->audio]->setVolumeTarget(1.0f, 0.5f);
+            audioManager->channels[tr.node->audio]->setVolumeTarget(0.5f, 1.0f/4.0f);
  	}
 
 	// if player was obstructed, then respond to the contact
