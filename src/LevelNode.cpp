@@ -20,7 +20,7 @@ LevelNode::~LevelNode(void)
 void LevelNode::CreateRandomWorld(int depth)
 {
 	//create piece of geometry
-	Geom* newGeom = new Geom(true,Vec2(2,1));
+	Geom* newGeom = new Geom(true,false,Vec2(2,1),0,0,0);
 	GeomInstance* newGeomInst = new GeomInstance(Vec2(0,0),newGeom);
 	objs.push_back(newGeomInst);
 
