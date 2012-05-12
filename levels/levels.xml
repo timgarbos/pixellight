@@ -1,27 +1,94 @@
 <root>
 
   <levels>
-      <level start="5">
-        <edge start="5" end="0" side="2" ccw="0"/>
-        <edge start="5" end="2" side="1" ccw="0"/>
-        <edge start="2" end="1" side="2" ccw="0"/>
-        <edge start="0" end="1" side="1" ccw="0"/>
-        <edge start="2" end="10" side="0" ccw="1"/>
-        <edge start="10" end="0" side="1" ccw="3"/>
-        
-      </level>
 
-    <level start="5">
-      <edge start="5" end="20" side="1" ccw="0"/>
-      <edge start="20" end="6" side="1" ccw="0"/>
-      <edge start="6" end="1" side="2" ccw="0"/>
-      <edge start="5" end="0" side="2" ccw="0"/>
-      <edge start="0" end="2" side="1" ccw="0"/>
-      <edge start="2" end="4" side="1" ccw="0"/>
-      <edge start="4" end="3" side="1" ccw="0"/>
-      <edge start="3" end="1" side="1" ccw="0"/>
-      
+    <level start="10">
+      <edge start="10" end="11" side="1" ccw="0"/>
+      <edge start="11" end="12" side="1" ccw="0"/>
+      <edge start="12" end="13" side="1" ccw="0"/>
+      <edge start="13" end="14" side="1" ccw="0"/>
+      <edge start="14" end="15" side="1" ccw="0"/>
+      <edge start="15" end="30" side="1" ccw="0"/>
+
+      <edge start="10" end="0" side="2" ccw="0"/>
+      <edge start="11" end="1" side="2" ccw="0"/>
+      <edge start="12" end="2" side="2" ccw="0"/>
+      <edge start="13" end="3" side="2" ccw="0"/>
+      <edge start="14" end="4" side="2" ccw="0"/>
+      <edge start="15" end="5" side="2" ccw="0"/>
+      <edge start="30" end="6" side="2" ccw="0"/>
+
+
+      <edge start="9" end="9" side="0" ccw="0"/>
+      <edge start="9" end="9" side="1" ccw="0"/>
+      <edge start="9" end="9" side="2" ccw="0"/>
+      <edge start="9" end="9" side="3" ccw="0"/>
+
+      <edge start="0" end="1" side="1" ccw="0"/>
+      <edge start="0" end="9" side="2" ccw="0"/>
+
+      <edge start="1" end="2" side="1" ccw="0"/>
+      <edge start="1" end="9" side="2" ccw="0"/>
+
+      <edge start="2" end="3" side="1" ccw="0"/>
+      <edge start="2" end="9" side="2" ccw="0"/>
+
+      <edge start="3" end="4" side="1" ccw="0"/>
+      <edge start="3" end="9" side="2" ccw="0"/>
+
+      <edge start="4" end="5" side="1" ccw="0"/>
+      <edge start="4" end="9" side="2" ccw="0"/>
+
+      <edge start="5" end="6" side="1" ccw="0"/>
+      <edge start="5" end="9" side="2" ccw="0"/>
+
+      <edge start="6" end="9" side="2" ccw="0"/>
+
     </level>
+
+
+    <level start="0">
+      <edge start="10" end="11" side="1" ccw="0"/>
+      <edge start="11" end="12" side="1" ccw="0"/>
+      <edge start="12" end="30" side="1" ccw="0"/>
+
+
+      <edge start="10" end="0" side="2" ccw="0"/>
+      <edge start="11" end="1" side="2" ccw="0"/>
+      <edge start="12" end="2" side="2" ccw="0"/>
+      <edge start="30" end="3" side="2" ccw="0"/>
+
+      <edge start="0" end="1" side="1" ccw="0"/>
+      <edge start="1" end="2" side="1" ccw="0"/>
+      <edge start="2" end="3" side="1" ccw="0"/>
+
+      <edge start="0" end="30" side="2" ccw="2"/>
+      <edge start="1" end="12" side="2" ccw="2"/>
+      <edge start="2" end="11" side="2" ccw="2"/>
+      <edge start="3" end="10" side="2" ccw="2"/>
+      
+    
+            
+     
+    </level>
+
+
+    <level start="10">
+      <edge start="0" end="10" side="0" ccw="1"/>
+      <edge start="10" end="11" side="1" ccw="0"/>
+      <edge start="11" end="12" side="1" ccw="0"/>
+      <edge start="12" end="0" side="1" ccw="0"/>
+      <edge start="0" end="30" side="1" ccw="0"/>
+    </level>
+
+    <level start="10">
+      <edge start="0" end="10" side="0" ccw="1"/>
+      <edge start="10" end="11" side="1" ccw="0"/>
+      <edge start="11" end="12" side="1" ccw="0"/>
+      <edge start="12" end="0" side="1" ccw="0"/>
+      <edge start="0" end="30" side="1" ccw="0"/>
+    </level>
+
 
     <level start="2">
       <edge start="0" end="1" side="2" ccw="0"/>
@@ -37,149 +104,256 @@
   </levels>
 
   <nodes>
-    <node  r="200" g="50" b="50" m="5">
+    <node  r="140" g="100" b="200" m="5" >
       <objects>
       </objects>
     </node>
-    <node  r="200" g="50" b="50" m="5">
+    <node  r="140" g="100" b="200" m="5">
+      <objects>
+      </objects>
+    </node>
+    <node  r="140" g="100" b="200" m="5">
+      <objects>
+      </objects>
+    </node>
+    <node  r="140" g="100" b="200" m="5">
+      <objects>
+      </objects>
+    </node>
+    <node  r="140" g="100" b="200" m="5">
+      <objects>
+      </objects>
+    </node>
+    <node  r="140" g="100" b="200" m="5">
+      <objects>
+      </objects>
+    </node>
+    <node  r="140" g="100" b="200" m="5">
       <objects>
 
       </objects>
     </node>
 
-    <node  r="200" g="50" b="50" m="5">
+    <node  r="140" g="100" b="200" m="5">
       <objects>
 
       </objects>
     </node>
 
-    <node  r="200" g="50" b="50" m="5">
+    <node  r="140" g="100" b="200" m="5">
       <objects>
 
       </objects>
     </node>
 
-    <node  r="200" g="50" b="50" m="5">
+    <node  r="140" g="100" b="200" m="5">
       <objects>
+        <object x="-0.5f" y="-0.5f" extendsX="0.08f" extendsY="0.08f" type="1" colorR="0" colorG="0" colorB="200" goal="1"/>
+        <object x="0.5f" y="-0.5f" extendsX="0.08f" extendsY="0.08f" type="1" colorR="0" colorG="0" colorB="200" goal="1"/>
+        <object x="0.5f" y="0.5f" extendsX="0.08f" extendsY="0.08f" type="1" colorR="0" colorG="0" colorB="200" goal="1"/>
+        <object x="-0.5f" y="0.5f" extendsX="0.08f" extendsY="0.08f" type="1" colorR="0" colorG="0" colorB="200" goal="1"/>
 
-      </objects>
-    </node>
-
-
-    <node  r="50" g="200" b="50" m="5">
-      <objects>
-        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
-      </objects>
-    </node>
-    <node  r="50" g="200" b="50" m="5">
-      <objects>
-        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
-      </objects>
-    </node>
-    <node  r="50" g="200" b="50" m="5">
-      <objects>
-        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
-      </objects>
-    </node>
-    <node  r="50" g="200" b="50" m="5">
-      <objects>
-        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
-      </objects>
-    </node>
-    <node  r="50" g="200" b="50" m="5">
-      <objects>
-        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
-      </objects>
-    </node>
-
-	<node  r="50" g="200" b="50" m="4">
-      <objects>
-        <object x="0.8f" y="0.8f" extendsX="0.2f" extendsY="0.2f" type="1"/>
-      </objects>
-    </node>
-		<node  r="50" g="200" b="50" m="4">
-      <objects>
-        <object x="0.8f" y="0.8f" extendsX="0.2f" extendsY="0.2f" type="1"/>
-      </objects>
-    </node>
-		<node  r="50" g="200" b="50" m="4">
-      <objects>
-        <object x="0.8f" y="0.8f" extendsX="0.2f" extendsY="0.2f" type="1"/>
-      </objects>
-    </node>
-		<node  r="50" g="200" b="50" m="4">
-      <objects>
-        <object x="0.8f" y="0.8f" extendsX="0.2f" extendsY="0.2f" type="1"/>
-      </objects>
-    </node>
-		<node  r="50" g="200" b="50" m="4">
-      <objects>
-        <object x="0.8f" y="0.8f" extendsX="0.2f" extendsY="0.2f" type="1"/>
-      </objects>
-    </node>
-	
-	<node  r="50" g="200" b="50" m="4">
-      <objects>
-        <object x="0.8f" y="-0.8f" extendsX="0.2f" extendsY="0.2f" type="1"/>
-      </objects>
-    </node>
-		<node  r="50" g="200" b="50" m="4">
-      <objects>
-        <object x="0.8f" y="-0.8f" extendsX="0.2f" extendsY="0.2f" type="1"/>
-      </objects>
-    </node>
-		<node  r="50" g="200" b="50" m="4">
-      <objects>
-        <object x="0.8f" y="-0.8f" extendsX="0.2f" extendsY="0.2f" type="1"/>
-      </objects>
-    </node>
-		<node  r="50" g="200" b="50" m="4">
-      <objects>
-        <object x="0.8f" y="-0.8f" extendsX="0.2f" extendsY="0.2f" type="1"/>
-      </objects>
-    </node>
-		<node  r="50" g="200" b="50" m="4">
-      <objects>
-        <object x="0.8f" y="-0.8f" extendsX="0.2f" extendsY="0.2f" type="1"/>
-      </objects>
-    </node>
+        <object x="-0.2f" y="-0.2f" extendsX="0.08f" extendsY="0.08f" type="1" colorR="0" colorG="50" colorB="200" goal="1"/>
+        <object x="0.2f" y="-0.2f" extendsX="0.08f" extendsY="0.08f" type="1" colorR="0" colorG="50" colorB="200" goal="1"/>
+        <object x="0.2f" y="0.2f" extendsX="0.08f" extendsY="0.08f" type="1" colorR="0" colorG="50" colorB="200" goal="1"/>
+        <object x="-0.2f" y="0.2f" extendsX="0.08f" extendsY="0.08f" type="1" colorR="0" colorG="50" colorB="200" goal="1"/>
 
 
-    <node  r="50" g="200" b="50" m="5" audio="3">
-      <objects>
-        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
-        <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1" />
-        
-        <object x="0.0f" y="-0.8f" extendsX="0.05f" extendsY="0.2f" type="1" colorG="130"/>
-        <object x="0.0f" y="-0.6f" extendsX="0.05f" extendsY="0.15f" type="1" colorR="140" colorG="100"/>
       
       </objects>
     </node>
-    <node  r="100" g="200" b="50" m="5">
+
+
+    <node  r="10" g="200" b="150" m="5" audio="1">
       <objects>
-        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1"/>
-        <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1"/>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
       </objects>
     </node>
-    <node  r="100" g="200" b="50" m="5">
+    <node  r="10" g="200" b="150" m="5" audio="1">
       <objects>
-        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1"/>
-        <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1"/>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+                
+        <object x="0.0f" y="-0.8f" extendsX="0.05f" extendsY="0.2f" type="1" colorG="130"/>
+        <object x="0.0f" y="-0.6f" extendsX="0.05f" extendsY="0.15f" type="1" colorR="230" colorG="100"/>
       </objects>
     </node>
-    <node  r="100" g="200" b="50" m="5">
+    <node  r="10" g="200" b="150" m="5" audio="1">
       <objects>
-        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1"/>
-        <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1"/>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+       
+        <object x="0.2f" y="-0.8f" extendsX="0.05f" extendsY="0.2f" type="1" colorG="130"/>
+        <object x="0.2f" y="-0.6f" extendsX="0.05f" extendsY="0.15f" type="1" colorR="230" colorG="100"/>
+        <object x="0.3f" y="-0.85f" extendsX="0.05f" extendsY="0.2f" type="1" colorG="130"/>
+        <object x="0.3f" y="-0.75f" extendsX="0.05f" extendsY="0.15f" type="1" colorR="230" colorG="100"/>
+        
       </objects>
     </node>
-    <node  r="100" g="200" b="50" m="5">
+    <node  r="10" g="200" b="150" m="5" audio="1">
       <objects>
-        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1"/>
-        <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1"/>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
       </objects>
     </node>
-   
+    <node  r="10" g="200" b="150" m="5" audio="1">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+
+        <object x="-0.3f" y="-0.85f" extendsX="0.05f" extendsY="0.2f" type="1" colorG="130"/>
+        <object x="-0.3f" y="-0.75f" extendsX="0.05f" extendsY="0.15f" type="1" colorR="230" colorG="100"/>
+
+        <object x="0.15f" y="-0.9f" extendsX="0.05f" extendsY="0.2f" type="1" colorG="130"/>
+        <object x="0.15f" y="-0.8f" extendsX="0.05f" extendsY="0.15f" type="1" colorR="230" colorG="100"/>
+
+        
+      </objects>
+    </node>
+    <node  r="10" g="200" b="150" m="5" audio="1">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+      </objects>
+    </node>
+    <node  r="10" g="200" b="150" m="5" audio="1">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+      </objects>
+    </node>
+    <node  r="10" g="200" b="150" m="5" audio="1">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+      </objects>
+    </node>
+    <node  r="10" g="200" b="150" m="5" audio="1">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+      </objects>
+    </node>
+    <node  r="10" g="200" b="150" m="5" audio="1">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+      </objects>
+    </node>
+
+
+    <node  r="50" g="150" b="150" m="5" audio="3">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+        <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1" />
+
+        <object x="0.0f" y="-0.8f" extendsX="0.05f" extendsY="0.2f" type="1" colorG="130"/>
+        <object x="0.0f" y="-0.6f" extendsX="0.05f" extendsY="0.15f" type="1" colorR="140" colorG="100"/>
+
+      </objects>
+    </node>
+    <node  r="50" g="150" b="150" m="5" audio="3">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+        <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1" />
+
+        <object x="0.0f" y="-0.8f" extendsX="0.05f" extendsY="0.2f" type="1" colorG="130"/>
+        <object x="0.0f" y="-0.6f" extendsX="0.05f" extendsY="0.15f" type="1" colorR="140" colorG="100"/>
+
+      </objects>
+    </node>
+    <node  r="50" g="150" b="150" m="5" audio="3">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+        <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1" />
+
+        <object x="0.0f" y="-0.8f" extendsX="0.05f" extendsY="0.2f" type="1" colorG="130"/>
+        <object x="0.0f" y="-0.6f" extendsX="0.05f" extendsY="0.15f" type="1" colorR="140" colorG="100"/>
+
+      </objects>
+    </node>
+    <node  r="50" g="150" b="150" m="5" audio="3">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+        <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1" />
+
+        <object x="0.0f" y="-0.8f" extendsX="0.05f" extendsY="0.2f" type="1" colorG="130"/>
+        <object x="0.0f" y="-0.6f" extendsX="0.05f" extendsY="0.15f" type="1" colorR="140" colorG="100"/>
+
+      </objects>
+    </node>
+    <node  r="50" g="150" b="150" m="5" audio="3">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+        <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1" />
+
+        <object x="0.0f" y="-0.8f" extendsX="0.05f" extendsY="0.2f" type="1" colorG="130"/>
+        <object x="0.0f" y="-0.6f" extendsX="0.05f" extendsY="0.15f" type="1" colorR="140" colorG="100"/>
+
+      </objects>
+    </node>
+    <node  r="50" g="150" b="150" m="5" audio="3">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+        <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1" />
+
+        <object x="0.0f" y="-0.8f" extendsX="0.05f" extendsY="0.2f" type="1" colorG="130"/>
+        <object x="0.0f" y="-0.6f" extendsX="0.05f" extendsY="0.15f" type="1" colorR="140" colorG="100"/>
+
+      </objects>
+    </node>
+    <node  r="50" g="150" b="150" m="5" audio="3">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+        <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1" />
+
+        <object x="0.0f" y="-0.8f" extendsX="0.05f" extendsY="0.2f" type="1" colorG="130"/>
+        <object x="0.0f" y="-0.6f" extendsX="0.05f" extendsY="0.15f" type="1" colorR="140" colorG="100"/>
+
+      </objects>
+    </node>
+    <node  r="50" g="150" b="150" m="5" audio="3">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+        <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1" />
+
+        <object x="0.0f" y="-0.8f" extendsX="0.05f" extendsY="0.2f" type="1" colorG="130"/>
+        <object x="0.0f" y="-0.6f" extendsX="0.05f" extendsY="0.15f" type="1" colorR="140" colorG="100"/>
+
+      </objects>
+    </node>
+    <node  r="50" g="150" b="150" m="5" audio="3">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+        <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1" />
+
+        <object x="0.0f" y="-0.8f" extendsX="0.05f" extendsY="0.2f" type="1" colorG="130"/>
+        <object x="0.0f" y="-0.6f" extendsX="0.05f" extendsY="0.15f" type="1" colorR="140" colorG="100"/>
+
+      </objects>
+    </node>
+    <node  r="50" g="150" b="150" m="5" audio="3">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+        <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1" />
+
+        <object x="0.0f" y="-0.8f" extendsX="0.05f" extendsY="0.2f" type="1" colorG="130"/>
+        <object x="0.0f" y="-0.6f" extendsX="0.05f" extendsY="0.15f" type="1" colorR="140" colorG="100"/>
+
+      </objects>
+    </node>
+
+    <node  r="50" g="150" b="150" m="5" audio="3">
+      <objects>
+        <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
+       
+        <object x="-0.5f" y="-0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="1"/>
+        <object x="0.5f" y="-0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="1"/>
+        <object x="0.5f" y="0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="1"/>
+        <object x="-0.5f" y="0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="1"/>
+
+        <object x="-0.2f" y="-0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="1"/>
+        <object x="0.2f" y="-0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="1"/>
+        <object x="0.2f" y="0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="1"/>
+        <object x="-0.2f" y="0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="1"/>
+        
+        
+        <object x="0.0f" y="0.0f" extendsX="0.1f" extendsY="0.1f" type="1" colorR="255" colorG="0" colorB="50" goal="1"/>
+
+      </objects>
+    </node>
+
   </nodes>
-  
+
 </root>

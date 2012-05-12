@@ -11,7 +11,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\AudioChannel.cpp" />
+    <ClCompile Include="src\AudioManager.cpp" />
     <ClCompile Include="src\f3x5.cpp" />
+    <ClCompile Include="src\fmod_utils.cpp" />
     <ClCompile Include="src\Geom.cpp" />
     <ClCompile Include="src\GeomInstance.cpp" />
     <ClCompile Include="src\LevelEdge.cpp" />
@@ -22,7 +25,10 @@
     <ClCompile Include="src\tinyxml2.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\AudioChannel.h" />
+    <ClInclude Include="src\AudioManager.h" />
     <ClInclude Include="src\f3x5.h" />
+    <ClInclude Include="src\fmod_utils.h" />
     <ClInclude Include="src\Geom.h" />
     <ClInclude Include="src\GeomInstance.h" />
     <ClInclude Include="src\LevelEdge.h" />
