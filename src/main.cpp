@@ -978,9 +978,9 @@ void game()
 			rot90(dir, 4-ccw);
 
 			float spd = 0.9f + 0.15f * (rand() % 100);
-			float ttl = 1 + (60.0f/spd) * tr.d;
+			float ttl = 1.0f + (60.0f/spd) * tr.d;
 
-			pxp_emit(static_cast<unsigned int>(ttl), spd*0.3f*dir.x, spd*0.3f*dir.y, 0.0f, 0.0f, i%root->colorMod==0?RANDRGB2(root->colorR,root->colorG,root->colorB,80):RANDRGB);
+			pxp_emit(static_cast<unsigned int>(ttl), spd*scale*dir.x, spd*scale*dir.y, 0.0f, 0.0f, i%root->colorMod==0?RANDRGB2(root->colorR,root->colorG,root->colorB,80):RANDRGB);
 
 			if (tr.geom != NULL)
 			{
@@ -1146,7 +1146,7 @@ int main(int argc, char * argv[])
 	glfwEnable(GLFW_STICKY_KEYS);
 	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
 	glfwOpenWindow(WINW, WINH, 8, 8, 8, 0, 0, 0, GLFW_WINDOW);
-	glfwSetWindowTitle("Photon Boy");
+	glfwSetWindowTitle("photonboy 1e-7");
     
     audioManager = new AudioManager();
     
