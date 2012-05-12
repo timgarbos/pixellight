@@ -75,7 +75,7 @@ typedef struct traceres
 	Vec2			dir;
 	float			d;
 	unsigned int	ccw;
-	int				norm;
+	unsigned int	norm;
 } traceres_t;
 
 typedef struct pxp
@@ -116,7 +116,8 @@ unsigned int	texid;
 float			texv[] = { -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f };
 float			texc[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f };
 
-bool			ground = false;
+//bool			ground	= false;
+unsigned int	normpre	= 0;
 
 /*
 	dchr
@@ -610,22 +611,23 @@ void move_player()
 	float		len;
 	Vec2		dir;
 	float		dd;
+	traceres_t	trtmp;
 	traceres_t	tr;
 
-	// apply left/right acceleration
-	if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
+	// allow left/right acceleration
+	if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS && normpre != NORM_E)
 	{
-		acc.x -= ground ? 30.0f : 15.0f;
+		acc.x -= (normpre == NORM_N) ? 30.0f : 15.0f;
 	}
-	if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
+	if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS && normpre != NORM_W)
 	{
-		acc.x += ground ? 30.0f : 15.0f;
+		acc.x += (normpre == NORM_N) ? 30.0f : 15.0f;
 	}
 
-	// if on ground
-	if (ground)
+	// if player hit ground in last move
+	if (normpre == NORM_N)
 	{
-		// apply jump impulse
+		// allow jump impulse
 		if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
 		{
 			acc.y += (6.0f / DT);
@@ -633,35 +635,71 @@ void move_player()
 	}
 	else
 	{
-		// apply some gravity in the air
+		// apply some gravity
 		acc.y -= 10.0f;
 	}
-
-	// transform acceleration into current space
-	rot90(acc, ccw);
 
 	// velocity intergration step
 	vel.x += DT * acc.x;
 	vel.y += DT * acc.y;
 
 	// apply some damping
-	if (ccw % 2 == 0)
+	vel.x *= 0.9f;
+
+	// trace prep!
+	if ((len = std::sqrt(vel.x*vel.x + vel.y*vel.y)) == 0.0f)
 	{
-		vel.x *= 0.9f;
-	}
-	else
-	{
-		vel.y *= 0.9f;
+		return;
 	}
 
-	// trace prepare!
-	len		= std::sqrt(vel.x*vel.x + vel.y*vel.y);
 	dir.x	= vel.x/len;
 	dir.y	= vel.y/len;
 	dd		= DT * len;
 
+	rot90(dir, ccw);
+
 	// trace execute!
 	trace(root, pos, dir, dd, tr);
+
+	///* probably don't have time to make this work before the deadline*/
+	//// trace scout!
+	//float x0 = pos.x-0.15f;
+	//float x1 = pos.x+0.15f;
+	//float y0 = pos.y-0.15f;
+	//float y1 = pos.y+0.15f;
+
+	//trtmp.d = dd;
+	//trace(root, Vec2(x0, y0), dir, dd, tr);
+	//if (tr.d != 0.0f && tr.d < trtmp.d)
+	//{
+	//	trtmp = tr;
+	//}
+	//trace(root, Vec2(x1, y0), dir, dd, tr);
+	//if (tr.d != 0.0f && tr.d < trtmp.d)
+	//{
+	//	trtmp = tr;
+	//}
+	//trace(root, Vec2(x0, y1), dir, dd, tr);
+	//if (tr.d != 0.0f && tr.d < trtmp.d)
+	//{
+	//	trtmp = tr;
+	//}
+	//trace(root, Vec2(x1, y1), dir, dd, tr);
+	//if (tr.d != 0.0f && tr.d < trtmp.d)
+	//{
+	//	trtmp = tr;
+	//}
+
+	//// trace execute!
+	//trace(root, pos, dir, trtmp.d, tr);
+	//if (trtmp.d != 0.0f && tr.norm == 0 && trtmp.norm != 0)
+	//{
+	//	tr.norm = ((4 + (trtmp.norm-1) - ccw) % 4) + 1;
+	//}
+	//else
+	//{
+	//	tr.norm = 0;
+	//}
 
 	// did we change root?
 	if (root != tr.node)
@@ -670,34 +708,38 @@ void move_player()
 		ccw = (ccw + tr.ccw) % 4;
 	}
 
-	// update stuff
+	// if player was obstructed, then respond to the contact
+	if (tr.norm != 0)
+	{
+		// transform contact normal
+		tr.norm = ((4 + (tr.norm-1) - ccw) % 4) + 1;
+
+		// clip velocity by tangent
+		switch (tr.norm)
+		{
+		case NORM_N:
+		case NORM_S:
+			vel.y = 0.0f;
+			vel.x *= ((dd - tr.d) / dd);
+			break;
+
+		case NORM_W:
+		case NORM_E:
+			vel.x = 0.0f;
+			vel.y *= ((dd - tr.d) / dd);
+			break;
+		}
+	}
+
+	// store contact normal for next move (may be zero)
+	normpre = tr.norm;
+
+	// move player
 	root	= tr.node;
 	pos.x	= tr.pos.x;
 	pos.y	= tr.pos.y;
 
-	// transform velocity
-	rot90(vel, tr.ccw);
-
-	// clamp velocity
-	switch (tr.norm)
-	{
-	case NORM_N:
-	case NORM_S:
-		vel.y = 0.0f;
-		vel.x *= (dd - tr.d) / dd;
-		break;
-
-	case NORM_W:
-	case NORM_E:
-		vel.x = 0.0f;
-		vel.y *= (dd - tr.d) / dd;
-		break;
-	}
-
-	// update ground flag
-	ground = (((4+(tr.norm-1)-ccw)%4) + 1 == NORM_N);
-
-	// done?
+	// done
 	;
 }
 
