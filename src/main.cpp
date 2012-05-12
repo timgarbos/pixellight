@@ -985,7 +985,8 @@ void game()
 		// emit particles
 		for (unsigned int i = 0; i < ParticlesPerFrame; i++)
 		{
-			float a = particleTheta*i + 0.6f*sin(10.0f*glfwGetTime());
+			float	a = particleTheta*i + 0.6f*sin(10.0f*glfwGetTime());
+			Geom *	g = NULL;
 
 			dir.x = cos(a);
 			dir.y = sin(a);
@@ -998,9 +999,9 @@ void game()
 
 			pxp_emit(static_cast<unsigned int>(ttl), spd*scale*dir.x, spd*scale*dir.y, 0.0f, 0.0f, i%root->colorMod==0?RANDRGB2(root->colorR,root->colorG,root->colorB,80):RANDRGB);
 
-			if (tr.geom != NULL && tr.geom->isGoal)
+			if ((g = tr.geom) != NULL && (g->colorR | g->colorG | g->colorB) != 0)
 			{
-				pxp_emit(60, spd*0.3f*dir.x, spd*0.3f*dir.y, scale*dir.x*tr.d, scale*dir.y*tr.d, RGB(tr.geom->colorR,tr.geom->colorG,tr.geom->colorB));
+				pxp_emit(60, spd*0.3f*dir.x, spd*0.3f*dir.y, scale*dir.x*tr.d, scale*dir.y*tr.d, RGB(g->colorR,g->colorG,g->colorB));
 
 				/* gravity goals doesn't look good, scrapped
 				std::map<Geom *, Vec2>::iterator it = goals.find(tr.geom);
@@ -1162,7 +1163,7 @@ int main(int argc, char * argv[])
 	glfwEnable(GLFW_STICKY_KEYS);
 	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
 	glfwOpenWindow(WINW, WINH, 8, 8, 8, 0, 0, 0, GLFW_WINDOW);
-	glfwSetWindowTitle("Photon Boy");
+	glfwSetWindowTitle("photonboy 1e-7");
     
     audioManager = new AudioManager();
     
@@ -1193,8 +1194,6 @@ int main(int argc, char * argv[])
 
     delete audioManager;
     
-	// nuke
-
 	// nuke buffers
 	delete[] texdata;
 	delete[] pxpdata;
