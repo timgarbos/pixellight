@@ -95,7 +95,6 @@ typedef struct pxp
 */
 unsigned int	frame;
 float			frametime;
-bool			particles = false;
 
 Vec2			v00 = Vec2(-1.0f, -1.0f);	// lower left
 Vec2			v10 = Vec2(1.0f, -1.0f);	// lower right
@@ -117,8 +116,12 @@ unsigned int	texid;
 float			texv[] = { -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f };
 float			texc[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f };
 
-//bool			ground	= false;
 unsigned int	normpre	= 0;
+int				lvlcurr	= 0;
+int				lvlnext	= 0;
+
+unsigned int	wait	= 0;
+bool			died	= false;
 
 float off_ground_ratio = 0.0f;
 std::map<Geom *, Vec2> goals;
@@ -699,7 +702,7 @@ void move_player()
 	else
 	{
 		// apply some gravity
-		acc.y -= 10.0f;
+		acc.y -= 7.0f;
 	}
 
 	// velocity intergration step
@@ -724,7 +727,7 @@ void move_player()
 	// trace execute!
 	trace(root, pos, dir, dd, tr);
 
-	///* probably don't have time to make this work before the deadline*/
+	///* don't have time to make this work before the deadline*/
 	//// trace scout!
 	//float x0 = pos.x-0.15f;
 	//float x1 = pos.x+0.15f;
@@ -811,6 +814,22 @@ void move_player()
 	pos.x	= tr.pos.x;
 	pos.y	= tr.pos.y;
 
+	// maybe we hit the goal or something bad
+	if (tr.geom != NULL && tr.geom->isGoal)
+	{
+		died = false;
+		wait = 120;
+
+		lvlnext = (lvlcurr + 1) % 4;
+	}
+	else if ((tr.geom != NULL && tr.geom->isBad) || pos.x < -1.0f || pos.x > 1.0f || pos.y < -1.0f || pos.y > 1.0f)
+	{
+		died = true;
+		wait = 120;
+
+		//TODO: emit some death particles, maybe
+	}
+
 	// done
 	;
 }
@@ -837,11 +856,11 @@ void move_view(Vec2 const & v)
 }
 
 void capFramerate(double fps) {
-    static double start = 0, diff, wait;
-    wait = 1 / fps;
+    static double start = 0, diff, fwait;
+    fwait = 1 / fps;
     diff = glfwGetTime() - start;
-    if (diff < wait) {
-        glfwSleep(wait - diff);
+    if (diff < fwait) {
+        glfwSleep(fwait - diff);
     }
     start = glfwGetTime();
 }
@@ -852,7 +871,7 @@ void capFramerate(double fps) {
 void game()
 {
 	float		frametime0;
-	float		scale = 0.2f;
+	float		scale = 0.3f;
 	float		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
 	float		particleTheta = (2.0f * PI) / static_cast<float>(PARTICLESFRAME);
 	char		txt[100];
@@ -909,108 +928,93 @@ void game()
 		// poll input
 		glfwPollEvents();
 
-		// quit on escape
+		// handle input
 		if (glfwGetKey(GLFW_KEY_ESC) == GLFW_PRESS)
 		{
 			break;
 		}
-
-		// move the player
-		move_player();
-
-		/*
-		// handle input
-		mov.x = 0.0f;
-		mov.y = 0.0f;
-
-		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
-		{
-			mov.x -= 0.02f;
-		}
-		if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
-		{
-			mov.x += 0.02f;
-		}
-		if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
-		{
-			mov.y += 0.02f;
-		}
-		if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
-		{
-			mov.y -= 0.02f;
-		}
-
-		rot90(mov, ccw);
-
-		if (mov.x != 0.0f || mov.y != 0.0f)
-		{
-			move_view(mov);
-		}
-		*/
 		if (glfwGetKey('1') == GLFW_PRESS)
 		{
-			root = LevelLoader::LoadXml(0);
-			pos.x = 0;
-			pos.y = 0;
+			lvlnext = 0;
+			wait	= 1;
 		}
 		if (glfwGetKey('2') == GLFW_PRESS)
 		{
-			root = LevelLoader::LoadXml(1);
-			pos.x = 0;
-			pos.y = 0;
+			lvlnext = 1;
+			wait	= 1;
 		}
 		if (glfwGetKey('3') == GLFW_PRESS)
 		{
-			root = LevelLoader::LoadXml(2);
-			pos.x = 0;
-			pos.y = 0;
+			lvlnext = 2;
+			wait	= 1;
 		}
 		if (glfwGetKey('4') == GLFW_PRESS)
 		{
-			root = LevelLoader::LoadXml(3);
-			pos.x = 0;
-			pos.y = 0;
+			lvlnext = 3;
+			wait	= 1;
 		}
 
-		// mooo
-		if (glfwGetKey(GLFW_KEY_BACKSPACE) == GLFW_PRESS)
-		{
-			particles = !particles;
-		}
-
-		// prep
+		// prep draw
 		glClear(GL_COLOR_BUFFER_BIT);
 		glColor3f(1.0f, 1.0f, 1.0f);
 
-		// emit particles
-		for (unsigned int i = 0; i < ParticlesPerFrame; i++)
+		// waiting on level reset?
+		if (wait > 0)
 		{
-			float	a = particleTheta*i + 0.6f*sin(10.0f*glfwGetTime());
-			Geom *	g = NULL;
-
-			dir.x = cos(a);
-			dir.y = sin(a);
-
-			trace(root, pos, dir, 10.0f, tr);
-			rot90(dir, 4-ccw);
-
-			float spd = 0.9f + 0.15f * (rand() % 100);
-			float ttl = 1.0f + (60.0f/spd) * tr.d;
-
-			pxp_emit(static_cast<unsigned int>(ttl), spd*scale*dir.x, spd*scale*dir.y, 0.0f, 0.0f, i%root->colorMod==0?RANDRGB2(root->colorR,root->colorG,root->colorB,80):RANDRGB);
-
-			if ((g = tr.geom) != NULL && (g->colorR | g->colorG | g->colorB) != 0)
+			if (--wait == 0)
 			{
-				pxp_emit(60, spd*0.3f*dir.x, spd*0.3f*dir.y, scale*dir.x*tr.d, scale*dir.y*tr.d, RGB(g->colorR,g->colorG,g->colorB));
-
-				/* gravity goals doesn't look good, scrapped
-				std::map<Geom *, Vec2>::iterator it = goals.find(tr.geom);
-
-				if (it == goals.end())
+				if (lvlnext != lvlcurr)
 				{
-					goals[tr.geom] = Vec2(scale*tr.d*dir.x, scale*tr.d*dir.y);
+					root	= LevelLoader::LoadXml(lvlnext);
+					lvlcurr	= lvlnext;
 				}
-				*/
+
+				pos.x	= 0;
+				pos.y	= 0;
+				normpre	= 0;
+				died	= false;
+				ccw		= 0;
+			}
+		}
+
+		// move the player if not waiting
+		if (wait == 0)
+		{
+			move_player();
+		}
+
+		// emit particles
+		if (wait == 0)
+		{
+			for (unsigned int i = 0; i < ParticlesPerFrame; i++)
+			{
+				float	a = particleTheta*i + 0.6f*sin(10.0f*glfwGetTime());
+				Geom *	g = NULL;
+
+				dir.x = cos(a);
+				dir.y = sin(a);
+
+				trace(root, pos, dir, 10.0f, tr);
+				rot90(dir, 4-ccw);
+
+				float spd = 0.9f + 0.15f * (rand() % 100);
+				float ttl = 1.0f + (60.0f/spd) * tr.d;
+
+				pxp_emit(static_cast<unsigned int>(ttl), spd*scale*dir.x, spd*scale*dir.y, 0.0f, 0.0f, i%root->colorMod==0?RANDRGB2(root->colorR,root->colorG,root->colorB,80):RANDRGB);
+
+				if ((g = tr.geom) != NULL && (g->colorR | g->colorG | g->colorB) != 0)
+				{
+					pxp_emit(60, spd*0.3f*dir.x, spd*0.3f*dir.y, scale*dir.x*tr.d, scale*dir.y*tr.d, RGB(g->colorR,g->colorG,g->colorB));
+
+					/* gravity goals doesn't look good, scrapped
+					std::map<Geom *, Vec2>::iterator it = goals.find(tr.geom);
+
+					if (it == goals.end())
+					{
+						goals[tr.geom] = Vec2(scale*tr.d*dir.x, scale*tr.d*dir.y);
+					}
+					*/
+				}
 			}
 		}
 
@@ -1030,8 +1034,10 @@ void game()
 		
 		dstr(10, 10, txt, RGB(255,255,255));
 
+		// enable additive blending
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
 		// draw plot
 		glEnable(GL_TEXTURE_2D);
 		{
@@ -1051,104 +1057,38 @@ void game()
 		glDisable(GL_TEXTURE_2D);
 		
 		// draw some rays
-		glColor4f(1.0f, 1.0f, 1.0f, 0.005f);
-		glLineWidth(25.0f);
-
-
-		for (unsigned int i = 0; i < RaysPerFrame; i++)
+		if (wait == 0)
 		{
-			dir.x = cos(theta * i);
-			dir.y = sin(theta * i);
+			glColor4f(1.0f, 1.0f, 1.0f, 0.005f);
+			glLineWidth(25.0f);
 
-			trace(root, pos, dir, 15.0f, tr);
-
-			rot90(dir, 4-ccw);
-
-			glBegin(GL_LINES);
+			for (unsigned int i = 0; i < RaysPerFrame; i++)
 			{
-				glVertex2f(0.0f, 0.0f);
-				glVertex2f(scale*tr.d*dir.x, scale*tr.d*dir.y);
+				dir.x = cos(theta * i);
+				dir.y = sin(theta * i);
+
+				trace(root, pos, dir, 15.0f, tr);
+
+				rot90(dir, 4-ccw);
+
+				glBegin(GL_LINES);
+				{
+					glVertex2f(0.0f, 0.0f);
+					glVertex2f(scale*tr.d*dir.x, scale*tr.d*dir.y);
+				}
+				glEnd();
 			}
-			glEnd();
 		}
 
-		glDisable(GL_BLEND);
+		// disable additive blending
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-		// swap
+		// swap, gogogo!
 		glfwSwapBuffers();
 		
 		// next frame
 		capFramerate(60.0);
-	}
-}
-
-void editor()
-{
-	float		step = (2.0f * 3.14f) / static_cast<float>(RAYSFRAME);
-	Vec2		dir;
-	traceres_t	tr;
-
-	root = LevelLoader::LoadXml(0);
-	pos.x = 0;
-	pos.y = 0;
-
-	while (true)
-	{
-		glfwPollEvents();
-
-		// quit on escape
-		if (glfwGetKey(GLFW_KEY_ESC) == GLFW_PRESS)
-		{
-			break;
-		}
-
-		// handle input
-		if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
-		{
-			move_view(Vec2(-0.02f, 0.0f));
-		}
-		else if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
-		{
-			move_view(Vec2(0.02f, 0.0f));
-		}
-		else if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
-		{
-			move_view(Vec2(0.0f, 0.02f));
-		}
-		else if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
-		{
-			move_view(Vec2(0.0f, -0.02f));
-		}
-
-		// prep
-		glClear(GL_COLOR_BUFFER_BIT);
-		glLoadIdentity();
-		glScalef(0.3f, 0.3f, 0.3f);
-		glColor3f(1.0f, 1.0f, 1.0f);
-
-		root->Draw(pos);
-
-		// draw some rays
-		/*for (unsigned int i = 0; i < RAYSFRAME; i++)
-		{
-			dir.x = cos(step * i);
-			dir.y = sin(step * i);
-
-			trace(root, pos, dir, 20.0f, tr);
-
-			glBegin(GL_LINES);
-			{
-				glVertex2f(0.0f, 0.0f);
-				glVertex2f(tr.d*dir.x, tr.d*dir.y);
-			}
-			glEnd();
-		}*/
-
-		// swap
-		glfwSwapBuffers();
-
-		// next frame
-		;
 	}
 }
 
@@ -1163,9 +1103,7 @@ int main(int argc, char * argv[])
 	glfwEnable(GLFW_STICKY_KEYS);
 	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
 	glfwOpenWindow(WINW, WINH, 8, 8, 8, 0, 0, 0, GLFW_WINDOW);
-	glfwSetWindowTitle("photonboy 1e-7");
-    
-    audioManager = new AudioManager();
+	glfwSetWindowTitle("Photon Boy 1e-7");
     
 	// init buffers
 	glGenTextures(1, &texid);
@@ -1188,10 +1126,13 @@ int main(int argc, char * argv[])
 
 	pxppoolcursor = 0;
 
-	// loop
+	// init audio
+    audioManager = new AudioManager();
+    
+	// loop game
 	game();
-	//editor();
 
+	// nuke audio
     delete audioManager;
     
 	// nuke buffers
