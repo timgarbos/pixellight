@@ -982,7 +982,7 @@ void game()
 
 			pxp_emit(static_cast<unsigned int>(ttl), spd*0.3f*dir.x, spd*0.3f*dir.y, 0.0f, 0.0f, i%root->colorMod==0?RANDRGB2(root->colorR,root->colorG,root->colorB,80):RANDRGB);
 
-			if (tr.geom != NULL && tr.geom->isGoal)
+			if (tr.geom != NULL)
 			{
 				pxp_emit(60, spd*0.3f*dir.x, spd*0.3f*dir.y, scale*dir.x*tr.d, scale*dir.y*tr.d, RGB(tr.geom->colorR,tr.geom->colorG,tr.geom->colorB));
 
