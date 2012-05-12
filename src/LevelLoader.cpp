@@ -1,5 +1,6 @@
 #include "LevelLoader.h"
 
+#define LEVELDEBUG 0
 
 LevelLoader::LevelLoader(void)
 {
@@ -78,12 +79,16 @@ LevelNode* LevelLoader::LoadXml(int index)
 	XMLDocument* doc = new XMLDocument();
 	if(doc->LoadFile("levels/levels.xml") == XML_SUCCESS)
 	{
+#if LEVELDEBUG
 		printf("\n xml: %s",doc->Value());
 		printf("\nLoaded XML.",0);
+#endif
 	}
 	else
 	{
+#if LEVELDEBUG
 		printf("\nLoaded XML FALIED. %i",doc->ErrorID());
+#endif
 	}
 	XMLNode* nodes = doc->FirstChild()->FirstChild()->NextSibling();
 		//To make relations easy we create a list of all the nodes, in order to later connect them
@@ -100,7 +105,7 @@ LevelNode* LevelLoader::LoadXml(int index)
 			newNode->colorB = node->ToElement()->IntAttribute("b");
 			newNode->colorMod = node->ToElement()->IntAttribute("m");
 			//if(newNode->colorMod==0)
-				newNode->colorMod = 1;
+				newNode->colorMod = 2;
             
             newNode->audio = node->ToElement()->IntAttribute("audio");
 			
@@ -127,11 +132,15 @@ LevelNode* LevelLoader::LoadXml(int index)
 
 				newNode->objs.push_back(newGeomInstance);
 
+#if LEVELDEBUG
 				printf("\n LOADED OBJECT \n",0);
+#endif
 			}
 		
 			levelNodes.push_back(newNode);
+#if LEVELDEBUG
 			printf("\n LOADED NODE \n",0);
+#endif
 		}
 		//Go through all edges
 		 
@@ -150,7 +159,9 @@ LevelNode* LevelLoader::LoadXml(int index)
 			int side = edge->ToElement()->IntAttribute("side");
 			int ccw = edge->ToElement()->IntAttribute("ccw");
 
+#if LEVELDEBUG
 			printf("\n loading edge start: %i end: %i side: %i  ccw: %i",start,end,side,ccw);
+#endif
 			if(end<0)
 				continue;
 			//Set start edges
@@ -263,7 +274,9 @@ LevelNode* LevelLoader::LoadXml(int index)
 				break;
 			}
 		}
+#if LEVELDEBUG
 		printf("\n LOADED LEVEL \n",0);
+#endif
 
 	delete doc;
 	return rootNode;

@@ -45,8 +45,8 @@ pixellight!
 #define RAYSFRAME			3100
 #define RAYSFRAMEDEV		1500
 
-#define PARTICLESFRAME		1200
-#define PARTICLESFRAMEDEV	1200
+#define PARTICLESFRAME		1200//1000
+#define PARTICLESFRAMEDEV	800//1200//800
 
 #define TRACEDEBUG	0
 
@@ -61,7 +61,7 @@ pixellight!
 #define NORM_S		3
 #define NORM_E		4
 
-#define PXPLIMIT	65535
+#define PXPLIMIT	131071//65535
 
 #define NUMLEVELS	5
 
@@ -694,11 +694,11 @@ void move_player()
 	// allow left/right acceleration
 	if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS && normpre != NORM_E)
 	{
-		acc.x -= (normpre == NORM_N) ? 30.0f : 15.0f;
+		acc.x -= (normpre == NORM_N) ? 50.0f : 15.0f;
 	}
 	if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS && normpre != NORM_W)
 	{
-		acc.x += (normpre == NORM_N) ? 30.0f : 15.0f;
+		acc.x += (normpre == NORM_N) ? 50.0f : 15.0f;
 	}
 
 	// if player hit ground in last move
@@ -842,8 +842,6 @@ void move_player()
 		died	= true;
 		wait	= 120;
 		waitbeg = wait;
-
-		//TODO: emit some death particles, maybe
 	}
 
 	// done
@@ -896,6 +894,7 @@ void game()
 	traceres_t	tr;
 
 	root	= LevelLoader::LoadXml(0);
+	root0	= root;
 	pos.x	= 0.0f;
 	pos.y	= 0.0f;
 	ccw		= 0;
@@ -1174,6 +1173,7 @@ int main(int argc, char * argv[])
 	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
 	glfwOpenWindow(WINW, WINH, 8, 8, 8, 0, 0, 0, GLFW_WINDOW);
 	glfwSetWindowTitle("photonboy 1e-7");
+	glViewport((WINW%WINH)>>1, 0, WINH, WINH);
     
 	// init buffers
 	glGenTextures(1, &texid);
