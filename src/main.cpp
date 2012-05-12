@@ -63,6 +63,8 @@ pixellight!
 
 #define PXPLIMIT	65535
 
+#define NUMLEVELS	4
+
 int RaysPerFrame = RAYSFRAME;
 int ParticlesPerFrame = PARTICLESFRAME;
 /*
@@ -121,7 +123,9 @@ int				lvlcurr	= 0;
 int				lvlnext	= 0;
 
 unsigned int	wait	= 0;
+unsigned int	waitbeg	= 0;
 bool			died	= false;
+bool			wooo	= false;
 
 float off_ground_ratio = 0.0f;
 std::map<Geom *, Vec2> goals;
@@ -651,22 +655,28 @@ void pxp_plot()
 			x = static_cast<int>(p.xx * ex + ex);
 			y = static_cast<int>(p.xy * ey + ey);
 			
-				for(int ix=x-pixelSize/2;ix<x+pixelSize;ix++)
+			/*
+			for(int ix=x-pixelSize/2;ix<x+pixelSize;ix++)
+			{
+				for(int iy=y-pixelSize/2;iy<y+pixelSize;iy++)
 				{
-					for(int iy=y-pixelSize/2;iy<y+pixelSize;iy++)
+					if (ix >= 0 && ix <= TEXW-1 &&
+						iy >= 0 && iy <= TEXH-1)
 					{
-						if (ix >= 0 && ix <= TEXW-1 &&
-								iy >= 0 && iy <= TEXH-1)
-						{
-							*TX(ix,iy) = p.color;
-						}
+						*TX(ix,iy) = p.color;
 					}
 				}
+			}
+			*/
 
+			if (x >= 0 && x <= TEXW-1 &&
+				x >= 0 && y <= TEXH-1)
+			{
+				*TX(x,y) = p.color;
 			}
 		}
 	}
-
+}
 
 /*
 	move_player
@@ -710,7 +720,7 @@ void move_player()
 	vel.y += DT * acc.y;
 
 	// apply some damping
-	vel.x *= 0.9f;
+	vel.x *= 0.85f;
 
 	// trace prep!
 	if ((len = std::sqrt(vel.x*vel.x + vel.y*vel.y)) == 0.0f)
@@ -817,15 +827,18 @@ void move_player()
 	// maybe we hit the goal or something bad
 	if (tr.geom != NULL && tr.geom->isGoal)
 	{
-		died = false;
-		wait = 120;
-
-		lvlnext = (lvlcurr + 1) % 4;
+		wooo	= true;
+		died	= false;
+		wait	= 120;
+		waitbeg = wait;
+		lvlnext = (lvlcurr + 1) % NUMLEVELS;
 	}
 	else if ((tr.geom != NULL && tr.geom->isBad) || pos.x < -1.0f || pos.x > 1.0f || pos.y < -1.0f || pos.y > 1.0f)
 	{
-		died = true;
-		wait = 120;
+		wooo	= false;
+		died	= true;
+		wait	= 120;
+		waitbeg = wait;
 
 		//TODO: emit some death particles, maybe
 	}
@@ -874,7 +887,7 @@ void game()
 	float		scale = 0.3f;
 	float		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
 	float		particleTheta = (2.0f * PI) / static_cast<float>(PARTICLESFRAME);
-	char		txt[100];
+	char		txt[200];
 	Vec2		mov;
 	Vec2		dir;
 	traceres_t	tr;
@@ -937,21 +950,25 @@ void game()
 		{
 			lvlnext = 0;
 			wait	= 1;
+			waitbeg	= wait;
 		}
 		if (glfwGetKey('2') == GLFW_PRESS)
 		{
 			lvlnext = 1;
 			wait	= 1;
+			waitbeg	= wait;
 		}
 		if (glfwGetKey('3') == GLFW_PRESS)
 		{
 			lvlnext = 2;
 			wait	= 1;
+			waitbeg	= wait;
 		}
 		if (glfwGetKey('4') == GLFW_PRESS)
 		{
 			lvlnext = 3;
 			wait	= 1;
+			waitbeg	= wait;
 		}
 
 		// prep draw
@@ -972,6 +989,7 @@ void game()
 				pos.x	= 0;
 				pos.y	= 0;
 				normpre	= 0;
+				wooo	= false;
 				died	= false;
 				ccw		= 0;
 			}
@@ -1017,6 +1035,48 @@ void game()
 				}
 			}
 		}
+		else if ((died || wooo) && wait >= (waitbeg>>1))
+		{
+			char const * msgwin	= "yaay";
+			char const * msgbad	= "awww";
+			char const * msg	= died ? msgbad : msgwin;
+
+			float ps = 0.25f*scale;
+			float x0 = -4.5f * ps;
+			float y0 = 2.5f * ps;
+
+			for (int i = 0; i < 4; i++)
+			{
+				unsigned char	c = msg[i];
+				unsigned short	s = f3x5[f3x5t[c]];
+
+				for (unsigned char y = 0; y < 5; y++)
+				{
+					for (unsigned char x = 0; x < 3; x++)
+					{
+						if ((s & 1) != 0)
+						{
+							for (int k = 0; k < 4; k++)
+							{
+								float xf = x0 - x*ps - 0.01f*(rand()%100)*ps;
+								float yf = y0 - y*ps - 0.01f*(rand()%100)*ps;
+
+								float vx = 1.0f*scale*xf + 0.0001f*(rand()%100) - 0.0002f;
+								float vy = 1.0f*scale*yf + 0.0001f*(rand()%100) - 0.0002f;
+
+								unsigned int rn = 100+rand()%156;
+
+								pxp_emit(waitbeg>>2, vx, vy, xf, yf, died ? RGB(rn,0,0) : RGB(0,rn,0));
+							}
+						}
+
+						s >>= 1;
+					}
+				}
+
+				x0 += (4.0f * ps);
+			}
+		}
 
 		// move particles
 		pxp_step(DT);
@@ -1028,9 +1088,8 @@ void game()
 		frametime = static_cast<float>(glfwGetTime()) - frametime0;
 
 		// plot some text
-		sprintf(txt, "photon boy\n----------\nframe %d\nf/sec %d\n#free %d\n#live %d",
-			frame, static_cast<unsigned int>(1.0f / frametime),
-			PXPLIMIT-pxppoolcursor, pxppoolcursor);
+		sprintf(txt, "photon boy\n----------\nframe %d\nf/sec %d\n#free %d\n#live %d\nlvl## %d",
+			frame, static_cast<unsigned int>(1.0f / frametime), PXPLIMIT-pxppoolcursor, pxppoolcursor, lvlcurr+1);
 		
 		dstr(10, 10, txt, RGB(255,255,255));
 
