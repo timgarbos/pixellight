@@ -8,7 +8,6 @@ pixellight!
 
 // libc++
 #include <iostream>
-#include <map>
 
 // GL
 #include <GL/glfw.h>
@@ -46,7 +45,7 @@ pixellight!
 #define RAYSFRAMEDEV		1500
 
 #define PARTICLESFRAME		1200//1000
-#define PARTICLESFRAMEDEV	800//1200//800
+#define PARTICLESFRAMEDEV	1000//1200//800
 
 #define TRACEDEBUG	0
 
@@ -128,8 +127,9 @@ unsigned int	waitbeg	= 0;
 bool			died	= false;
 bool			wooo	= false;
 
+float			airtime	= 0.0f;
 float off_ground_ratio = 0.0f;
-std::map<Geom *, Vec2> goals;
+//std::map<Geom *, Vec2> goals;
 
 /*
 	dchr
@@ -583,6 +583,7 @@ void pxp_emit(unsigned int ttl, float vx, float vy, float xx, float xy, unsigned
 */
 void pxp_step(float dt)
 {
+	/* unused
 	int		gnum = 0;
 	int		gcnt = goals.size();
 	Vec2 *	gpos = new Vec2[gcnt];
@@ -591,6 +592,7 @@ void pxp_step(float dt)
 	{
 		gpos[gnum++] = it->second;
 	}
+	*/
 
 	//#pragma omp parallel for
 	for (int i = 0; i < PXPLIMIT; i++)
@@ -605,6 +607,7 @@ void pxp_step(float dt)
 			}
 			else
 			{
+				/* unused
 				for (int j = 0; j < gcnt; j++)
 				{
 					float dx = p.xx - gpos[j].x;
@@ -618,6 +621,7 @@ void pxp_step(float dt)
 						p.vy -= dt * 5.0f * dy * r;
 					}
 				}
+				*/
 
 				p.xx += dt * p.vx;
 				p.xy += dt * p.vy;
@@ -625,7 +629,9 @@ void pxp_step(float dt)
 		}
 	}
 
+	/* unused
 	delete[] gpos;
+	*/
 }
 
 /*
@@ -691,23 +697,23 @@ void move_player()
 	traceres_t	trtmp;
 	traceres_t	tr;
 
-	// allow left/right acceleration
+	// apply left/right acceleration
 	if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS && normpre != NORM_E)
 	{
-		acc.x -= (normpre == NORM_N) ? 50.0f : 15.0f;
+		acc.x -= (normpre == NORM_N) ? 30.0f : 15.0f;// was 50.0f : 15.0f; at exile presentation
 	}
 	if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS && normpre != NORM_W)
 	{
-		acc.x += (normpre == NORM_N) ? 50.0f : 15.0f;
+		acc.x += (normpre == NORM_N) ? 30.0f : 15.0f;// was 50.0f : 15.0f; at exile presentation
 	}
 
 	// if player hit ground in last move
 	if (normpre == NORM_N)
 	{
-		// allow jump impulse
+		// apply jump impulse
 		if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			acc.y += (6.0f / DT);
+			acc.y += (3.5f / DT);// was (6.0f / DT); at exile presentation
 		}
 	}
 	else
@@ -715,7 +721,7 @@ void move_player()
 		// apply some gravity if not moving too fast already
 		if (vel.y > -30.0f)
 		{
-			acc.y -= 7.0f;
+			acc.y -= 5.25f;// was 7.0f; at exile presentation
 		}
 	}
 
@@ -724,7 +730,7 @@ void move_player()
 	vel.y += DT * acc.y;
 
 	// apply some damping
-	vel.x *= 0.85f;
+	vel.x *= 0.85f;// was 0.85f; at exile presentation
 
 	// trace prep!
 	if ((len = std::sqrt(vel.x*vel.x + vel.y*vel.y)) == 0.0f)
@@ -885,7 +891,7 @@ void capFramerate(double fps) {
 void game()
 {
 	float		frametime0;
-	float		scale = 0.3f;
+	float		scale = 0.3f;// was 0.3f; at exile presentation
 	float		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
 	float		particleTheta = (2.0f * PI) / static_cast<float>(PARTICLESFRAME);
 	char		txt[200];
@@ -937,8 +943,10 @@ void game()
 		theta = (2.0f * PI) / static_cast<float>(RaysPerFrame);
 		particleTheta = (2.0f * PI) / static_cast<float>(ParticlesPerFrame);
 
+		/* unused
 		// clear goals
 		goals.clear();
+		*/
 
 		// poll input
 		glfwPollEvents();
@@ -998,6 +1006,8 @@ void game()
 				root	= root0;
 				pos.x	= 0.0f;
 				pos.y	= 0.0f;
+				vel.x	= 0.0f;
+				vel.y	= 0.0f;
 				normpre	= 0;
 				wooo	= false;
 				died	= false;

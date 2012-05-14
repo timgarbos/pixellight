@@ -354,15 +354,15 @@
       <objects>
         <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
        
-        <object x="-0.5f" y="-0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="1"/>
-        <object x="0.5f" y="-0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="1"/>
-        <object x="0.5f" y="0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="1"/>
-        <object x="-0.5f" y="0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="1"/>
+        <object x="-0.5f" y="-0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="0"/>
+        <object x="0.5f" y="-0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="0"/>
+        <object x="0.5f" y="0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="0"/>
+        <object x="-0.5f" y="0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="0"/>
 
-        <object x="-0.2f" y="-0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="1"/>
-        <object x="0.2f" y="-0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="1"/>
-        <object x="0.2f" y="0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="1"/>
-        <object x="-0.2f" y="0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="1"/>
+        <object x="-0.2f" y="-0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="0"/>
+        <object x="0.2f" y="-0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="0"/>
+        <object x="0.2f" y="0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="0"/>
+        <object x="-0.2f" y="0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="0"/>
         
         
         <object x="0.0f" y="0.0f" extendsX="0.1f" extendsY="0.1f" type="1" colorR="255" colorG="0" colorB="50" goal="1"/>
@@ -372,15 +372,15 @@
 
     <node  r="255" g="30" b="150" m="5" audio="3">
       <objects>
-        <object x="-0.5f" y="-0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="1"/>
-        <object x="0.5f" y="-0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="1"/>
-        <object x="0.5f" y="0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="1"/>
-        <object x="-0.5f" y="0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="1"/>
+        <object x="-0.5f" y="-0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="0"/>
+        <object x="0.5f" y="-0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="0"/>
+        <object x="0.5f" y="0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="0"/>
+        <object x="-0.5f" y="0.5f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="200" colorG="0" colorB="255" goal="0"/>
 
         <object x="-0.2f" y="-0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="1"/>
-        <object x="0.2f" y="-0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="1"/>
-        <object x="0.2f" y="0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="1"/>
-        <object x="-0.2f" y="0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="1"/>
+        <object x="0.2f" y="-0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="0"/>
+        <object x="0.2f" y="0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="0"/>
+        <object x="-0.2f" y="0.2f" extendsX="0.05f" extendsY="0.05f" type="1" colorR="255" colorG="50" colorB="255" goal="0"/>
 
 
         <object x="0.0f" y="0.0f" extendsX="0.1f" extendsY="0.1f" type="1" colorR="255" colorG="0" colorB="50" goal="1"/>

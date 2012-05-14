@@ -1,7 +1,7 @@
 #include "Geom.h"
 
 
-Geom::Geom(bool isStatic, bool isGoal, bool isBad, Vec2 extends, unsigned int colorR, unsigned int colorG, unsigned int colorB)
+Geom::Geom(bool isStatic, bool isGoal, bool isBad, Vec2 extends, int colorR, int colorG, int colorB)
 {
 	this->isStatic = isStatic;
 	this->isGoal = isGoal;
