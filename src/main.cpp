@@ -126,6 +126,7 @@ unsigned int	wait	= 0;
 unsigned int	waitbeg	= 0;
 bool			died	= false;
 bool			wooo	= false;
+bool			quit	= false;
 
 float			airtime	= 0.0f;
 float off_ground_ratio = 0.0f;
@@ -911,7 +912,7 @@ void game()
 
     int frames_off_ground = 0;
     
-	while (true)
+	while (!quit)
 	{
         // calc delta time.
         frame_time = glfwGetTime();
@@ -1172,17 +1173,27 @@ void game()
 }
 
 /*
+	closecb
+*/
+int GLFWCALL closecb()
+{
+	quit = true;
+	return GL_FALSE;
+}
+
+/*
 	main
 */
 int main(int argc, char * argv[])
 {
 	// init glfw
 	glfwInit();
-	glfwSwapInterval(1);// vsync
 	glfwEnable(GLFW_STICKY_KEYS);
 	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
 	glfwOpenWindow(WINW, WINH, 8, 8, 8, 0, 0, 0, GLFW_WINDOW);
 	glfwSetWindowTitle("photonboy 1e-7");
+	glfwSwapInterval(1);// vsync
+	glfwSetWindowCloseCallback(closecb);
 	glViewport((WINW%WINH)>>1, 0, WINH, WINH);
     
 	// init buffers
@@ -1222,7 +1233,8 @@ int main(int argc, char * argv[])
 
 	// nuke glfw
 	glfwCloseWindow();
-    
+    glfwTerminate();
+
 	// done
 	return 0;
 }
