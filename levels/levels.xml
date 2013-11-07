@@ -162,7 +162,7 @@
       </objects>
     </node>
 
-    <node  r="140" g="100" b="200" m="5">
+    <node  r="140" g="100" b="200" m="5" audio="1">
       <objects>
         <object x="-0.5f" y="-0.5f" extendsX="0.08f" extendsY="0.08f" type="1" colorR="0" colorG="0" colorB="200" goal="1"/>
         <object x="0.5f" y="-0.5f" extendsX="0.08f" extendsY="0.08f" type="1" colorR="0" colorG="0" colorB="200" goal="1"/>
@@ -269,7 +269,7 @@
 
       </objects>
     </node>
-    <node  r="50" g="150" b="150" m="5" audio="3">
+    <node  r="50" g="150" b="150" m="5" audio="2">
       <objects>
         <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
         <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1" />
@@ -289,7 +289,7 @@
 
       </objects>
     </node>
-    <node  r="50" g="150" b="255" m="5" audio="4">
+    <node  r="50" g="150" b="255" m="5" audio="2">
       <objects>
         <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
         <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1" />
@@ -329,7 +329,7 @@
 
       </objects>
     </node>
-    <node  r="50" g="150" b="150" m="5" audio="3">
+    <node  r="50" g="150" b="150" m="5" audio="1">
       <objects>
         <object x="0.0f" y="-0.9f" extendsX="1.0f" extendsY="0.1f" type="1" colorG="80"/>
         <object x="0.0f" y="0.9f" extendsX="1.0f" extendsY="0.1f" type="1" />
